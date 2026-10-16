@@ -81,6 +81,8 @@ curl -s -X POST http://localhost:8000/sessoes/SESSION_ID/confirmacoes \
 
 Sessão/apartamento ausente retorna `404`; confirmação inexistente, alheia ou já respondida retorna `409`; corpo inválido retorna `422`. Falha de inferência sem resultado de ação persistido retorna `502`, timeout retorna `504`, e indisponibilidade do banco retorna `503`. Disputa normal por uma reserva retorna `200`, com recusa de negócio para quem perder. Falha de geração após commit retorna `200` com uma apresentação determinística dos resultados persistidos, sem nova inferência.
 
+Para testar pelo VSCode com a extensão [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client), abra [api.http](api.http). Ajuste as variáveis no topo e execute `criarSessao`, `enviarMensagem` e, quando houver pendência, `responderConfirmacao`. Os IDs são capturados das respostas automaticamente. O arquivo também inclui consultas de verificação, exemplos de mensagens e casos de erro esperados.
+
 ## Arquitetura
 
 [Configuração da equipe](src/aurora/agents/team.py): o principal transfere atendimento para três especialistas. Reservas recebe tools de agenda, reserva e cancelamento; visitantes recebe consulta e autorização; regulamento recebe apenas busca seletiva. Essa divisão limita o conjunto de tools por domínio e permite retomar o especialista que pediu confirmação. Os quatro usam a mesma configuração Gemini.

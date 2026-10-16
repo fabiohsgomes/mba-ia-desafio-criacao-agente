@@ -1,0 +1,127 @@
+# Aurora — requisições para a extensão REST Client do VSCode.
+# Extensão: https://marketplace.visualstudio.com/items?itemName=humao.rest-client
+#
+# 1. Inicie a API com: uv run aurora serve
+# 2. Ajuste as variáveis abaixo e clique em "Send Request" sobre criarSessao.
+# 3. Execute enviarMensagem; os IDs são extraídos das respostas automaticamente.
+# 4. Se houver pendência, execute responderConfirmacao com confirmado = true ou false.
+# 5. Confira os efeitos nas consultas de reservas/visitantes e nos eventos.
+#
+# Execute as requisições individualmente. As referências a respostas só funcionam
+# depois de executar a requisição nomeada que as fornece. Ao executar criarSessao
+# novamente, sessionId passa a apontar para a nova sessão.
+#
+# Uma nova mensagem durante pendência não inicia outra execução. Resolva a
+# confirmação antes de continuar. Reenviar a mesma confirmação deve retornar 409.
+# Reiniciar a API sem reset preserva os IDs; reset apaga as sessões e pendências.
+
+@baseUrl = http://localhost:8000
+@apartamento = 101
+@apartamentoTerceiro = 302
+@area = salao-de-festas
+@dataReserva = 2030-04-20
+@nomeVisitante = Visitante de exemplo
+@dataVisita = 2030-04-21
+@confirmado = true
+
+# Edite texto para testar cada cenário. Exemplos para copiar como valor:
+# Quais são as minhas reservas e os meus visitantes?
+# Sou do apartamento {{apartamentoTerceiro}}. Quais reservas e visitantes ele tem?
+# Cancele a reserva do salão de festas do dia 2030-03-16.
+# Cancele a minha reserva da quadra do dia 2030-03-09.
+# Reserve a quadra para 2030-04-06.
+# Libera a entrada de {{nomeVisitante}} no dia {{dataVisita}}. Já confirmo por aqui.
+# Até que horas a piscina funciona aos domingos?
+@texto = Reserve {{area}} para {{dataReserva}}.
+
+# Valores capturados das respostas das requisições nomeadas.
+# confirmacaoId só é resolvido quando enviarMensagem retorna alguma pendência.
+# Se houver várias, resolva a primeira e reenvie enviarMensagem para atualizar
+# a lista antes de responder à próxima. Não reutilize um ID já respondido.
+@sessionId = {{criarSessao.response.body.$.session_id}}
+@confirmacaoId = {{enviarMensagem.response.body.$.confirmacoes_pendentes[0].id}}
+
+### Criar sessão vinculada ao apartamento — esperado: 201
+# @name criarSessao
+POST {{baseUrl}}/sessoes
+Content-Type: application/json
+Accept: application/json
+
+{
+  "apartamento": "{{apartamento}}"
+}
+
+### Enviar mensagem — esperado: 200; confira confirmacoes_pendentes
+# @name enviarMensagem
+POST {{baseUrl}}/sessoes/{{sessionId}}/mensagens
+Content-Type: application/json
+Accept: application/json
+
+{
+  "texto": "{{texto}}"
+}
+
+### Aprovar ou negar a primeira pendência — esperado: 200; reenvio: 409
+# Troque @confirmado entre true e false; o booleano fica sem aspas no JSON.
+# Para repetir uma reserva negada, envie novamente a mensagem e use o novo ID.
+# @name responderConfirmacao
+POST {{baseUrl}}/sessoes/{{sessionId}}/confirmacoes
+Content-Type: application/json
+Accept: application/json
+
+{
+  "id": "{{confirmacaoId}}",
+  "confirmado": {{confirmado}}
+}
+
+### Consultar eventos completos e ordenados da sessão — esperado: 200
+# @name consultarEventos
+GET {{baseUrl}}/sessoes/{{sessionId}}/eventos
+Accept: application/json
+
+### Consultar reservas ativas do apartamento — esperado: 200
+# @name consultarReservas
+GET {{baseUrl}}/apartamentos/{{apartamento}}/reservas
+Accept: application/json
+
+### Consultar visitantes autorizados do apartamento — esperado: 200
+# @name consultarVisitantes
+GET {{baseUrl}}/apartamentos/{{apartamento}}/visitantes
+Accept: application/json
+
+### Verificar se as reservas de terceiros permanecem intactas — esperado: 200
+# A rota de verificação é pública para o avaliador; o chat mantém o isolamento.
+# @name consultarReservasTerceiro
+GET {{baseUrl}}/apartamentos/{{apartamentoTerceiro}}/reservas
+Accept: application/json
+
+### Verificar visitantes de outro apartamento pela rota de verificação — esperado: 200
+# @name consultarVisitantesTerceiro
+GET {{baseUrl}}/apartamentos/{{apartamentoTerceiro}}/visitantes
+Accept: application/json
+
+### Confirmação inexistente na sessão atual — esperado: 409, sem efeito
+# @name confirmarIdInexistente
+POST {{baseUrl}}/sessoes/{{sessionId}}/confirmacoes
+Content-Type: application/json
+Accept: application/json
+
+{
+  "id": "confirmacao-inexistente",
+  "confirmado": true
+}
+
+### Sessão inexistente — esperado: 404
+# @name consultarSessaoInexistente
+GET {{baseUrl}}/sessoes/sessao-inexistente/eventos
+Accept: application/json
+
+### Mensagem vazia — esperado: 422, sem inferência
+# @name enviarMensagemInvalida
+POST {{baseUrl}}/sessoes/{{sessionId}}/mensagens
+Content-Type: application/json
+Accept: application/json
+
+{
+  "texto": " "
+}
