@@ -4,6 +4,8 @@ Versão: 1.0
 Data: 2026-10-15
 Responsável: a definir
 
+> Implementação e validação em 16/10/2026: consulte o [relatório de evidências](validacao.md) e o [README operacional](../README.md). As seções de desenho abaixo preservam as propostas originais; os critérios de aceite foram verificados na implementação entregue.
+
 ---
 
 ### 1. Contexto e motivação técnica
@@ -543,30 +545,30 @@ Proposta: habilitar chaves estrangeiras em cada conexão, manter journal em modo
 
 ### 9. Critérios de aceite técnicos
 
-Todos os itens abaixo são pendentes de implementação e execução. Testes com dublês validam o código determinístico; não comprovam integração real com Gemini ou retomada ADK.
+Os itens abaixo foram verificados conforme o [relatório de validação](validacao.md), com testes locais e execução dos 15 passos com Gemini real. Os dublês são restritos à inferência/transporte nos testes determinísticos; a execução externa é documentada separadamente.
 
-- [ ] **AT-01, ambiente:** `uv sync` instala o projeto com ADK exato, lockfile, scripts e um worker; a documentação operacional final na raiz tem Arquitetura, Garantias e Como rodar com referências reais.
-- [ ] **AT-02, contrato:** as seis operações HTTP preservam schemas, status, arrays vazios e datas; sessão/apartamento ausente retorna `404`, confirmação inválida `409` e corpo inválido `422`.
-- [ ] **AT-03, isolamento:** cenários adversariais dos passos 3, 4 e 10 não revelam `RSV-4821` ou `Marina Duarte` quando proibidos e não alteram o apartamento 302; inspecionar respostas, tools e eventos.
-- [ ] **AT-04, fonte de escopo:** nenhuma tool mutável ou de leitura própria aceita apartamento livre do modelo; deltas de estado e alegações de identidade não alteram o vínculo da sessão.
-- [ ] **AT-05, confirmação:** reserva com taxa e visitante não geram efeito antes da rota; negativa gera zero efeitos; aprovação executável gera exatamente um; id alheio/inexistente e reenvio não executam ação.
-- [ ] **AT-06, operações sem aprovação:** reserva gratuita e cancelamento próprio não geram pendência; cancelamento preserva código e histórico.
-- [ ] **AT-07, concorrência:** duas sessões aprovam a mesma área/data ao mesmo tempo e obtêm dois `200`, com exatamente uma reserva ativa e uma recusa sem informação de terceiro.
-- [ ] **AT-08, integridade:** testar a restrição de exclusividade na escrita e unicidade de códigos contra dados iniciais, novos e cancelados; não depender de consulta prévia.
-- [ ] **AT-09, rollback:** injetar falhas entre efeito, conclusão, estado e eventos antes do commit; nenhuma escrita do grupo permanece. O estado em memória também é descartado.
-- [ ] **AT-10, queda após commit:** encerrar o processo antes da resposta, reiniciar e reenviar a confirmação; receber `409`, preservar evento/resultado e manter um único efeito.
-- [ ] **AT-11, retomada ADK:** criar pendência no especialista, reiniciar a API e aprovar; comprovar execução da tool original, no especialista correto e na mesma invocação correlacionada. Repetir para reserva e visitante e testar negativa.
-- [ ] **AT-12, continuidade:** executar o passo 13, preservando quantidade e conteúdo dos eventos anteriores e acrescentando eventos na mesma sessão após reinício.
-- [ ] **AT-13, fronteira transacional:** instrumentar o acesso ao banco e comprovar uma conexão/commit por grupo, sem commit independente de tool/serviço de sessão e sem chamada Gemini durante escrita aberta.
-- [ ] **AT-14, inicialização/reset:** banco vazio importa tudo atomicamente; reinício preserva banco populado; domínio parcial inválido não recebe carga silenciosa. Reset bem-sucedido restaura o estado inicial e limpa conversas; falha restaura integralmente o estado anterior.
-- [ ] **AT-15, fontes:** comparar arquivos de `dados/` com a base antes e depois da avaliação e do reset; nenhuma alteração.
-- [ ] **AT-16, regulamento:** pergunta sobre piscina aos domingos responde fechamento às `20h`, com fonte local; eventos incluem tools e somente trechos pertinentes. Perguntas ambíguas pedem esclarecimento; principal não contém regulamento nas instruções.
-- [ ] **AT-17, sem retry:** simular falhas transitórias e quota no transporte; comprovar uma tentativa por chamada planejada na aplicação e SDK, sem reinício de Runner, fallback ou repetição de tool.
-- [ ] **AT-18, limites:** simular inferência além do timeout e bloqueio de banco além da espera; obter `504`/`503` quando aplicável, sem novos efeitos tardios. Reduzir limites por configuração para testes rápidos.
-- [ ] **AT-19, resultado durável:** falhar a geração de texto após commit e obter `200` com texto determinístico fiel ao resultado e às pendências, sem nova inferência. Só ter mensagem/evento de encaminhamento não habilita esse comportamento.
-- [ ] **AT-20, observabilidade:** verificar logs JSON, identificador de correlação, durações, tentativas e commit/rollback; garantir ausência de conversas, visitantes, credenciais e parâmetros SQL, inclusive nos logs de dependências.
-- [ ] **AT-21, execução local:** testar requisições da mesma sessão serializadas e sessões diferentes concorrentes, com liberação dos locks em erro/cancelamento.
-- [ ] **AT-22, prova real:** validar acesso/cota com uma chamada real e depois executar integralmente os 15 passos com Gemini, registrando ambiente, versões e resultados sem credenciais ou dados pessoais nos logs operacionais.
+- [x] **AT-01, ambiente:** `uv sync` instala o projeto com ADK exato, lockfile, scripts e um worker; a documentação operacional final na raiz tem Arquitetura, Garantias e Como rodar com referências reais.
+- [x] **AT-02, contrato:** as seis operações HTTP preservam schemas, status, arrays vazios e datas; sessão/apartamento ausente retorna `404`, confirmação inválida `409` e corpo inválido `422`.
+- [x] **AT-03, isolamento:** cenários adversariais dos passos 3, 4 e 10 não revelam `RSV-4821` ou `Marina Duarte` quando proibidos e não alteram o apartamento 302; inspecionar respostas, tools e eventos.
+- [x] **AT-04, fonte de escopo:** nenhuma tool mutável ou de leitura própria aceita apartamento livre do modelo; deltas de estado e alegações de identidade não alteram o vínculo da sessão.
+- [x] **AT-05, confirmação:** reserva com taxa e visitante não geram efeito antes da rota; negativa gera zero efeitos; aprovação executável gera exatamente um; id alheio/inexistente e reenvio não executam ação.
+- [x] **AT-06, operações sem aprovação:** reserva gratuita e cancelamento próprio não geram pendência; cancelamento preserva código e histórico.
+- [x] **AT-07, concorrência:** duas sessões aprovam a mesma área/data ao mesmo tempo e obtêm dois `200`, com exatamente uma reserva ativa e uma recusa sem informação de terceiro.
+- [x] **AT-08, integridade:** testar a restrição de exclusividade na escrita e unicidade de códigos contra dados iniciais, novos e cancelados; não depender de consulta prévia.
+- [x] **AT-09, rollback:** injetar falhas entre efeito, conclusão, estado e eventos antes do commit; nenhuma escrita do grupo permanece. O estado em memória também é descartado.
+- [x] **AT-10, queda após commit:** encerrar o processo antes da resposta, reiniciar e reenviar a confirmação; receber `409`, preservar evento/resultado e manter um único efeito.
+- [x] **AT-11, retomada ADK:** criar pendência no especialista, reiniciar a API e aprovar; comprovar execução da tool original, no especialista correto e na mesma invocação correlacionada. Repetir para reserva e visitante e testar negativa.
+- [x] **AT-12, continuidade:** executar o passo 13, preservando quantidade e conteúdo dos eventos anteriores e acrescentando eventos na mesma sessão após reinício.
+- [x] **AT-13, fronteira transacional:** instrumentar o acesso ao banco e comprovar uma conexão/commit por grupo, sem commit independente de tool/serviço de sessão e sem chamada Gemini durante escrita aberta.
+- [x] **AT-14, inicialização/reset:** banco vazio importa tudo atomicamente; reinício preserva banco populado; domínio parcial inválido não recebe carga silenciosa. Reset bem-sucedido restaura o estado inicial e limpa conversas; falha restaura integralmente o estado anterior.
+- [x] **AT-15, fontes:** comparar arquivos de `dados/` com a base antes e depois da avaliação e do reset; nenhuma alteração.
+- [x] **AT-16, regulamento:** pergunta sobre piscina aos domingos responde fechamento às `20h`, com fonte local; eventos incluem tools e somente trechos pertinentes. Perguntas ambíguas pedem esclarecimento; principal não contém regulamento nas instruções.
+- [x] **AT-17, sem retry:** simular falhas transitórias e quota no transporte; comprovar uma tentativa por chamada planejada na aplicação e SDK, sem reinício de Runner, fallback ou repetição de tool.
+- [x] **AT-18, limites:** simular inferência além do timeout e bloqueio de banco além da espera; obter `504`/`503` quando aplicável, sem novos efeitos tardios. Reduzir limites por configuração para testes rápidos.
+- [x] **AT-19, resultado durável:** falhar a geração de texto após commit e obter `200` com texto determinístico fiel ao resultado e às pendências, sem nova inferência. Só ter mensagem/evento de encaminhamento não habilita esse comportamento.
+- [x] **AT-20, observabilidade:** verificar logs JSON, identificador de correlação, durações, tentativas e commit/rollback; garantir ausência de conversas, visitantes, credenciais e parâmetros SQL, inclusive nos logs de dependências.
+- [x] **AT-21, execução local:** testar requisições da mesma sessão serializadas e sessões diferentes concorrentes, com liberação dos locks em erro/cancelamento.
+- [x] **AT-22, prova real:** validar acesso/cota com uma chamada real e depois executar integralmente os 15 passos com Gemini, registrando ambiente, versões e resultados sem credenciais ou dados pessoais nos logs operacionais.
 
 Ordem de execução proposta: primeiro prova de integração ADK/transação/retomada e acesso ao modelo; depois esquema e garantias determinísticas; em seguida contratos, observabilidade e falhas; por último fluxo real completo. A entrega não está concluída se apenas testes locais passarem.
 
