@@ -2,6 +2,45 @@
 
 API Python com Google ADK 2.12.0 e Gemini para reservas, visitantes e dúvidas sobre o regulamento. Implementa o [PRD](docs/PRD.md), o [FDD](docs/FDD.md) e as [ADRs aceitas](docs/adrs/generated/indice.md).
 
+## Arquitetura
+
+[Configuração da equipe](src/aurora/agents/team.py): o principal transfere atendimento para três especialistas. Reservas recebe tools de agenda, reserva e cancelamento; visitantes recebe consulta e autorização; regulamento recebe apenas busca seletiva. Essa divisão limita o conjunto de tools por domínio e permite retomar o especialista que pediu confirmação. Os quatro usam a mesma configuração Gemini.
+
+```mermaid
+flowchart LR
+    HTTP[FastAPI] --> Chat[Serviço de conversa e locks por sessão]
+    Chat --> Runner[Runner ADK]
+    Runner --> Principal
+    Principal --> Reservas
+    Principal --> Visitantes
+    Principal --> Regulamento
+    Reservas --> Tools[Tools e serviços de domínio]
+    Visitantes --> Tools
+    Regulamento --> Busca[Índice local de artigos]
+    Tools --> Intencoes[Intenções validadas]
+    Runner --> Sessoes[Serviço próprio de sessões]
+    Intencoes --> Sessoes
+    Sessoes --> SQLite[(SQLite único)]
+```
+
+As tools mutáveis preparam intenções sem gravar efeitos. O [adaptador de sessão](src/aurora/storage/sessions.py), no ponto `append_event` do Runner, aplica cada grupo de intenções e persiste seus resultados antes de liberar a próxima inferência. A chamada Gemini fica fora da transação. Em lotes, os efeitos são aplicados sequencialmente na mesma conexão. A restrição SQL decide a disponibilidade no instante da escrita.
+
+O ADK 2.12.0 pode emitir `adk_request_confirmation` antes ou depois da resposta provisória da tool, conforme o lote. O adaptador agrupa esses eventos e só confirma a proposta quando possui ambos. Na retomada, a resposta externa também aguarda o evento da tool original: efeito, resultado, conclusão, estado, eventos e checkpoint usam o mesmo `BEGIN IMMEDIATE`/commit. O histórico completo e os eventos de estado do ADK permitem ao Runner reconstruir a execução após reinício.
+
+O banco usa chaves estrangeiras, sincronização `FULL`, journal padrão de rollback e índice único parcial para reservas ativas. Operações SQLite rodam em callbacks síncronos em threads; cada callback abre e fecha sua conexão no mesmo thread. A versão do esquema é verificada na inicialização. Um catálogo parcialmente populado ou incompatível impede a subida; bancos válidos são preservados.
+
+## Garantias
+
+| Garantia | Código responsável e mecanismo |
+| --- | --- |
+| Cobrança/acesso somente com confirmação | [DomainService.stage](src/aurora/services/domain.py#L46) determina a taxa e prepara a proposta; [ChatService.confirm](src/aurora/services/chat.py#L80) valida a pendência da sessão e constrói a resposta ADK; [apply](src/aurora/storage/actions.py#L22) exige vínculo persistido, argumentos originais e autorização da rota. Texto ou argumentos escolhidos pelo modelo não substituem essa autorização |
+| Isolamento por apartamento | [DomainService.scoped](src/aurora/services/domain.py#L30) e [apply](src/aurora/storage/actions.py#L11) obtêm o apartamento da coluna persistida da sessão; [nenhuma tool aceita apartamento](src/aurora/tools/domain.py#L6). [Cancelamento](src/aurora/storage/actions.py#L46) filtra apartamento e código; [disponibilidade](src/aurora/services/domain.py#L37) projeta apenas booleano. O modelo não escolhe o escopo nem recebe dados da reserva alheia |
+| Persistência e retomada | [SQLiteSessionService.append_event](src/aurora/storage/sessions.py#L60) persiste eventos ADK completos e estado, preservando invocação e especialista; [get_session](src/aurora/storage/sessions.py#L35) reconstrói a sessão do banco; [Database.write](src/aurora/storage/database.py#L73) controla a transação única. A continuidade depende dos dados persistidos, e deltas do modelo não alteram a identidade |
+| Regulamento seletivo | [RegulationSearch](src/aurora/regulation/search.py#L39) indexa capítulos/artigos em memória; [buscar_regulamento](src/aurora/regulation/search.py#L52) retorna somente artigos pertinentes e pede esclarecimento em caso de ambiguidade. A seleção ocorre no código da busca; [o principal](src/aurora/agents/team.py#L51) não recebe o texto do regulamento nas instruções |
+| Uma reserva por área/data | [Índice único `uq_reserva_ativa`](src/aurora/storage/database.py#L23) impõe exclusividade na gravação, independentemente de consultas prévias ou decisões do modelo; [apply](src/aurora/storage/actions.py#L31) transforma colisão de agenda em recusa de negócio. A [chave primária do código](src/aurora/storage/database.py#L20) e o [cancelamento sem excluir a linha](src/aurora/storage/actions.py#L46) impedem reutilizar códigos |
+
+[Modelo/SDK](src/aurora/agents/model.py) limita o transporte a uma tentativa e cada inferência ao timeout configurado. [ChatService](src/aurora/services/chat.py) serializa mensagens/confirmações da mesma sessão; sessões distintas avançam em paralelo. Locks são liberados em erro e cancelamento. Cancelamento de uma escrita aguarda a thread concluir antes de liberar a sessão.
+
 ## Como rodar
 
 Requisitos: uv e Python 3.13+ (versão exigida pelos metadados atuais; validado em 3.13.5). O banco é SQLite local; nenhum container é necessário.
@@ -29,7 +68,7 @@ A API atende em `http://localhost:8000`. `probe` faz uma inferência real no mod
 
 Timeouts devem ser números finitos e positivos. O `.env` e os bancos locais são ignorados pelo Git. Não há retries automáticos nem troca automática de modelo; configurar `GEMINI_MODEL` é uma escolha explícita do operador.
 
-## API
+### API
 
 O contrato não usa prefixo `/v1`. Corpos e respostas são JSON. O OpenAPI está em `/openapi.json`.
 
@@ -63,6 +102,8 @@ Mensagens e confirmações retornam:
 
 O texto pode ser vazio enquanto a execução está suspensa. `confirmacoes_pendentes` sempre lista todas as pendências atuais da sessão; aprovação usa `true`, negativa usa `false`, ambos booleanos JSON. O cliente envia somente o ID e a decisão; os argumentos da ação vêm do banco. Mensagens durante pendência recebem `200` com orientação e não iniciam outra execução.
 
+Negar encerra somente aquela proposta. Pedir novamente a mesma reserva na mesma sessão gera uma nova confirmação com outro ID; o ID negado continua retornando `409` e não autoriza a nova proposta.
+
 Exemplo sem credenciais:
 
 ```sh
@@ -83,46 +124,7 @@ Sessão/apartamento ausente retorna `404`; confirmação inexistente, alheia ou 
 
 Para testar pelo VSCode com a extensão [REST Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client), abra [api.http](api.http). Ajuste as variáveis no topo e execute `criarSessao`, `enviarMensagem` e, quando houver pendência, `responderConfirmacao`. Os IDs são capturados das respostas automaticamente. O arquivo também inclui consultas de verificação, exemplos de mensagens e casos de erro esperados.
 
-## Arquitetura
-
-[Configuração da equipe](src/aurora/agents/team.py): o principal transfere atendimento para três especialistas. Reservas recebe tools de agenda, reserva e cancelamento; visitantes recebe consulta e autorização; regulamento recebe apenas busca seletiva. Essa divisão limita o conjunto de tools por domínio e permite retomar o especialista que pediu confirmação. Os quatro usam a mesma configuração Gemini.
-
-```mermaid
-flowchart LR
-    HTTP[FastAPI] --> Chat[Serviço de conversa e locks por sessão]
-    Chat --> Runner[Runner ADK]
-    Runner --> Principal
-    Principal --> Reservas
-    Principal --> Visitantes
-    Principal --> Regulamento
-    Reservas --> Tools[Tools e serviços de domínio]
-    Visitantes --> Tools
-    Regulamento --> Busca[Índice local de artigos]
-    Tools --> Intencoes[Intenções validadas]
-    Runner --> Sessoes[Serviço próprio de sessões]
-    Intencoes --> Sessoes
-    Sessoes --> SQLite[(SQLite único)]
-```
-
-As tools mutáveis preparam intenções sem gravar efeitos. O [adaptador de sessão](src/aurora/storage/sessions.py), no ponto `append_event` do Runner, aplica cada grupo de intenções e persiste seus resultados antes de liberar a próxima inferência. A chamada Gemini fica fora da transação. Em lotes, os efeitos são aplicados sequencialmente na mesma conexão. A restrição SQL decide a disponibilidade no instante da escrita.
-
-O ADK 2.12.0 pode emitir `adk_request_confirmation` antes ou depois da resposta provisória da tool, conforme o lote. O adaptador agrupa esses eventos e só confirma a proposta quando possui ambos. Na retomada, a resposta externa também aguarda o evento da tool original: efeito, resultado, conclusão, estado, eventos e checkpoint usam o mesmo `BEGIN IMMEDIATE`/commit. O histórico completo e os eventos de estado do ADK permitem ao Runner reconstruir a execução após reinício.
-
-O banco usa chaves estrangeiras, sincronização `FULL`, journal padrão de rollback e índice único parcial para reservas ativas. Operações SQLite rodam em callbacks síncronos em threads; cada callback abre e fecha sua conexão no mesmo thread. A versão do esquema é verificada na inicialização. Um catálogo parcialmente populado ou incompatível impede a subida; bancos válidos são preservados.
-
-## Garantias
-
-| Garantia | Código responsável e mecanismo |
-| --- | --- |
-| Cobrança/acesso somente com confirmação | [DomainService.stage](src/aurora/services/domain.py) determina a taxa e prepara a proposta; [ChatService.confirm](src/aurora/services/chat.py) valida a pendência da sessão e constrói a resposta ADK; [apply](src/aurora/storage/actions.py) exige vínculo persistido, argumentos originais e autorização da rota |
-| Isolamento por apartamento | [DomainService.scoped e stage](src/aurora/services/domain.py) e [apply](src/aurora/storage/actions.py) consultam a coluna persistida da sessão. Nenhuma tool aceita apartamento. Cancelamento filtra apartamento e código. Disponibilidade projeta apenas booleano |
-| Persistência e retomada | [SQLiteSessionService](src/aurora/storage/sessions.py) serializa eventos ADK completos e estado, preservando invocação e especialista; [Database.write](src/aurora/storage/database.py) controla a transação única. Delta de estado não altera a identidade |
-| Regulamento seletivo | [RegulationSearch](src/aurora/regulation/search.py) indexa capítulos/artigos em memória e retorna somente artigos pertinentes. Ambiguidade pede esclarecimento. O principal não recebe o texto do regulamento |
-| Uma reserva por área/data | [Esquema e índice `uq_reserva_ativa`](src/aurora/storage/database.py) impõem exclusividade na gravação; [apply](src/aurora/storage/actions.py) transforma colisão de agenda em recusa de negócio, preservando códigos inclusive após cancelamento |
-
-[Modelo/SDK](src/aurora/agents/model.py) limita o transporte a uma tentativa e cada inferência ao timeout configurado. [ChatService](src/aurora/services/chat.py) serializa mensagens/confirmações da mesma sessão; sessões distintas avançam em paralelo. Locks são liberados em erro e cancelamento. Cancelamento de uma escrita aguarda a thread concluir antes de liberar a sessão.
-
-## Testes e evidências
+### Testes e evidências
 
 ```sh
 uv sync --locked
@@ -138,7 +140,7 @@ A suíte padrão usa inferência programada, com Runner, transferências, tools,
 
 [Relatório de validação](docs/validacao.md) registra versões, resultados, falhas iniciais do TDD e a correspondência com os critérios do FDD. Não foi adicionado linter ou formatador.
 
-## Operação e limites
+### Operação e limites
 
 Logs operacionais da aplicação são JSON, com `X-Request-ID`, spans locais, duração e resultado de transação/inferência. Correlacione uma resposta com as linhas de mesmo `request_id`. Não há exportador de tracing, dashboard ou backend de métricas. Conversas, prompts, respostas Gemini, nomes, apartamentos, chaves e parâmetros SQL não são registrados nos logs. Os eventos completos ficam no SQLite e na rota de eventos, conforme o contrato.
 

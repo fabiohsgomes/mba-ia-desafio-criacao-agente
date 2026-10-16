@@ -113,10 +113,16 @@ async def test_fifteen_evaluator_steps_with_real_gemini(tmp_path):
             p = r["confirmacoes_pendentes"][0]
             assert p["detalhes"]["area"] == "salao-de-festas" and p["detalhes"]["data"] == "2030-04-20"
             assert not any(x["data"] == "2030-04-20" for x in await own())
-            await answer(s1, p, False)
+            denied = await answer(s1, p, False)
+            assert not denied["confirmacoes_pendentes"]
             assert not any(x["data"] == "2030-04-20" for x in await own())
             await step(7)
             r = await send(s1, "Reserve o salão de festas para 2030-04-20.")
+            assert r["confirmacoes_pendentes"], "Passo 8: novo pedido após negativa deve gerar nova confirmação"
+            assert len(r["confirmacoes_pendentes"]) == 1
+            assert r["confirmacoes_pendentes"][0]["id"] != p["id"]
+            assert (await c.post(f"/sessoes/{s1}/confirmacoes", json={"id": p["id"], "confirmado": True})).status_code == 409
+            assert not any(x["data"] == "2030-04-20" for x in await own())
             p = r["confirmacoes_pendentes"][0]
             await answer(s1, p)
             assert len([x for x in await own() if x["data"] == "2030-04-20"]) == 1

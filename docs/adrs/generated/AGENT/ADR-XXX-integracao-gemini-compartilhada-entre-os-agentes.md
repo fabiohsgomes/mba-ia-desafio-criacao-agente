@@ -119,7 +119,10 @@ sem evidência de funcionamento alegada nesta decisão.
 Falhas de inferência não podem ser confundidas com conclusão da ação.
 Cada chamada planejada tem uma tentativa, sem retries automáticos na
 aplicação ou no SDK. Chamadas distintas necessárias à conversa continuam
-permitidas. A falha não reinicia o Runner nem reaplica tools. Um resultado
+permitidas, inclusive uma nova chamada de tool em resposta a outro pedido
+explícito do morador após negativa, mesmo com argumentos iguais. As instruções
+dos agentes devem distinguir esse novo pedido da reaplicação automática de uma
+ação anterior. A falha não reinicia o Runner nem reaplica tools. Um resultado
 já confirmado no banco deve ser preservado e informado sem nova inferência;
 antes do commit, a unidade de trabalho respeita rollback. Falhas transitórias
 podem interromper o atendimento; esse é o trade-off aceito.

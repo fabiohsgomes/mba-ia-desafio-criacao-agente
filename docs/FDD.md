@@ -175,6 +175,8 @@ O serviço próprio deve serializar/restaurar tipos ADK, preservar todos os camp
 
 Proposta de estados da confirmação: `pendente`, `aprovada_executada`, `aprovada_recusada` e `negada`. Falha antes do commit mantém `pendente`, sem conclusão parcial. Estados terminais não voltam a pendente. Propostas com argumentos alterados exigem nova pendência.
 
+Uma negativa encerra somente a proposta identificada pelo seu ID. Um novo pedido explícito do morador, na mesma sessão e inclusive com área/data ou nome/data iguais, pode criar outra proposta com novo ID e nova chamada de tool. A confirmação anterior permanece negada, sem efeito; responder novamente ao ID antigo retorna `409` e não interfere na nova pendência. Não deduplicar pedidos por argumentos iguais ao longo do histórico da sessão. A proibição de repetição automática se aplica à reaplicação da mesma ação/execução e a retries de inferência, sem impedir chamadas distintas para novos pedidos do morador.
+
 A documentação oficial utiliza `adk_request_confirmation`, correlação pelo identificador da chamada e, quando a retomada está habilitada, pela invocação original. Também registra limitações de serviços nativos. Isso fundamenta os campos persistidos, sem comprovar a compatibilidade do serviço próprio com a versão fixada. [Confirmação de ações no ADK](https://adk.dev/tools-custom/confirmation/).
 
 **Fluxos alternativos e exceções**
@@ -552,6 +554,7 @@ Os itens abaixo foram verificados conforme o [relatório de validação](validac
 - [x] **AT-03, isolamento:** cenários adversariais dos passos 3, 4 e 10 não revelam `RSV-4821` ou `Marina Duarte` quando proibidos e não alteram o apartamento 302; inspecionar respostas, tools e eventos.
 - [x] **AT-04, fonte de escopo:** nenhuma tool mutável ou de leitura própria aceita apartamento livre do modelo; deltas de estado e alegações de identidade não alteram o vínculo da sessão.
 - [x] **AT-05, confirmação:** reserva com taxa e visitante não geram efeito antes da rota; negativa gera zero efeitos; aprovação executável gera exatamente um; id alheio/inexistente e reenvio não executam ação.
+  - Regressão dos passos 7–8: negar uma proposta e repetir o mesmo pedido na mesma sessão gera exatamente uma nova pendência com ID diferente, sem efeito antecipado. O ID negado continua retornando `409`; aprovar o novo ID grava uma reserva e reenviá-lo retorna `409`, mantendo um único efeito. Verificar o encadeamento com armazenamento real e com Gemini real.
 - [x] **AT-06, operações sem aprovação:** reserva gratuita e cancelamento próprio não geram pendência; cancelamento preserva código e histórico.
 - [x] **AT-07, concorrência:** duas sessões aprovam a mesma área/data ao mesmo tempo e obtêm dois `200`, com exatamente uma reserva ativa e uma recusa sem informação de terceiro.
 - [x] **AT-08, integridade:** testar a restrição de exclusividade na escrita e unicidade de códigos contra dados iniciais, novos e cancelados; não depender de consulta prévia.

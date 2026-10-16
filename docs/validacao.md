@@ -67,6 +67,18 @@ O teste usa banco temporário próprio, HTTP e reinícios da API sem reset. Não
 
 As verificações `uv sync --locked`, `uv lock --check`, `git diff --check` e `git diff --exit-code HEAD -- dados/` passaram. A chave local não foi alterada nem adicionada ao controle de versão.
 
+## Regressão do novo pedido após negativa — 16/10/2026
+
+Na auditoria posterior, `AURORA_RUN_LIVE=1 uv run pytest tests/test_live.py -q -s --tb=short` falhou no passo 8, após os passos 1–7 aprovados, em 64,64 segundos. O novo pedido do salão na mesma data retornou sem pendência: o agente consultou disponibilidade, recebeu resultado livre, mas referiu-se à negativa anterior e não chamou novamente a tool de reserva. O teste original terminou com `IndexError` ao acessar a lista vazia. Essa execução constitui o Red observado do comportamento; o resultado anterior aprovado não elimina a regressão.
+
+O novo teste local `test_same_request_after_denial_creates_independent_confirmation` passou antes da alteração das instruções: o armazenamento e o portão de confirmação já permitem nova proposta com os mesmos argumentos. O teste verifica IDs distintos, ausência de efeito antes da aprovação, rejeição do ID negado sem perder a pendência atual, aprovação única e reenvio com `409`. Ele usa inferência programada e não comprova, isoladamente, a interpretação do Gemini.
+
+O teste real agora exige explicitamente nova pendência com ID diferente no passo 8 e verifica que o ID negado continua inválido antes da nova aprovação. Uma repetição anterior à alteração das instruções passou pelos 15 passos e pelas três retomadas adicionais em 178,96 segundos, evidenciando intermitência. PRD, FDD e ADRs de confirmação e inferência foram alinhados para distinguir novo pedido explícito de retry automático. A instrução geral contra repetição foi delimitada ao pedido/execução atual, preservando as proteções de autorização e idempotência em código. O especialista de reservas também recebeu orientação explícita de criar nova proposta após negativa; consultar disponibilidade não substitui reservar.
+
+Após o ajuste, a suíte local passou com **38 testes aprovados, 1 skipped**, em 3,91 segundos, com os três avisos experimentais já conhecidos do ADK.
+
+Green com Gemini real após o ajuste: `AURORA_RUN_LIVE=1 uv run pytest tests/test_live.py -q -s --tb=short` concluiu com **1 teste aprovado em 154,91 segundos**, incluindo os **15 passos**, a nova verificação de IDs distintos após negativa, rejeição do ID negado antes da aprovação da nova proposta e as três retomadas adicionais após reinício. `git diff --check` e `git diff --exit-code HEAD -- dados/` também passaram. O resultado comprova esta execução; a falha intermitente anterior permanece registrada e não há garantia de interpretação para toda formulação possível.
+
 ## Limites da evidência
 
 Os testes cobrem cenários e invariantes especificados; não constituem prova de qualidade de interpretação para toda redação possível do morador. A cota e o acesso ao Gemini podem mudar. Não há validação de múltiplos processos ou escala de produção. Aliases locais do regulamento pedem esclarecimento quando não há seleção inequívoca. Recursos experimentais de confirmação/retomada do ADK são usados na versão fixada e exercitados pelos testes.

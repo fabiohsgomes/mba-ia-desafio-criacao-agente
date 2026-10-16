@@ -255,6 +255,7 @@ Criar reserva com código gerado pelo sistema, respeitando taxa, confirmação e
 
 - Taxa zero: reservar sem confirmação pendente.
 - Negativa: não criar reserva.
+- Após negativa, um novo pedido explícito, inclusive da mesma área/data na mesma sessão, deve gerar uma nova confirmação com outro ID. A confirmação negada permanece encerrada e seu reenvio recebe `409`, conforme os passos 7 e 8 do avaliador.
 - Duas aprovações de sessões diferentes para a mesma área/data: criar apenas uma reserva; retornar recusa normal para a outra, com HTTP `200` nas duas aprovações.
 - A consulta prévia de disponibilidade é permitida, mas não substitui a restrição no instante da gravação.
 

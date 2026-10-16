@@ -106,6 +106,12 @@ Uma negativa não altera o domínio, e uma aprovação válida permite tentar
 a operação sem prometer que a disponibilidade de uma reserva permaneceu livre.
 Identificadores não pendentes na sessão não autorizam nenhum efeito.
 O reenvio sequencial de resposta não pode repetir a ação.
+Uma negativa encerra apenas aquela proposta. Um novo pedido explícito na mesma
+sessão pode gerar outra confirmação com novo ID, inclusive com os mesmos
+argumentos. A proposta negada permanece terminal e seu ID continua retornando
+`409`, sem afetar a nova pendência. Essa distinção concretiza o passo 8 do PRD;
+não exige reabrir a confirmação negada nem alterar a arquitetura aprovada.
+Validar o ciclo pedir, negar, pedir novamente e aprovar, preservando efeito único.
 O comportamento de duas respostas simultâneas à mesma confirmação
 permanece fora do escopo definido no projeto.
 

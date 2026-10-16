@@ -68,6 +68,36 @@ async def test_denial_does_not_reserve_and_wrong_session_cannot_approve(tmp_path
         assert not any(r["data"] == "2030-04-20" for r in (await c.get("/apartamentos/101/reservas")).json())
 
 
+async def test_same_request_after_denial_creates_independent_confirmation(tmp_path):
+    app = create_app(Settings(db_path=tmp_path / "test.db"), ScriptedModel(script=[
+        transfer("reservas"), call("reservar_area", area="salao-de-festas", data="2030-04-20"),
+        {"text": "Solicitação negada pelo morador."},
+        call("reservar_area", area="salao-de-festas", data="2030-04-20"),
+        {"text": "Reserva realizada."}]))
+    async with client(app) as c:
+        sid = await session(c)
+        request = "Reserve o salão de festas para 2030-04-20."
+        first = (await message(c, sid, request))["confirmacoes_pendentes"][0]
+        denied = await confirm(c, sid, first, False)
+        assert denied.status_code == 200
+        assert denied.json()["confirmacoes_pendentes"] == []
+        before = (await c.get("/apartamentos/101/reservas")).json()
+        assert not any(r["data"] == "2030-04-20" for r in before)
+        second = (await message(c, sid, request))["confirmacoes_pendentes"]
+        assert len(second) == 1
+        assert second[0]["id"] != first["id"]
+        assert second[0]["detalhes"] == first["detalhes"]
+        assert (await c.get("/apartamentos/101/reservas")).json() == before
+        assert (await confirm(c, sid, first)).status_code == 409
+        assert (await message(c, sid, "Qual a pendência atual?"))["confirmacoes_pendentes"] == second
+        approved = await confirm(c, sid, second[0])
+        assert approved.status_code == 200
+        assert approved.json()["confirmacoes_pendentes"] == []
+        assert (await confirm(c, sid, second[0])).status_code == 409
+        rows = (await c.get("/apartamentos/101/reservas")).json()
+        assert len([r for r in rows if r["area"] == "salao-de-festas" and r["data"] == "2030-04-20"]) == 1
+
+
 async def test_isolation_cancel_and_free_reservation(tmp_path):
     model = ScriptedModel(script=[
         transfer("reservas"), call("listar_minhas_reservas"), {"text": "Só reservas próprias"},

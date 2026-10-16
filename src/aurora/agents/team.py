@@ -15,7 +15,12 @@ ação ocorreu sem resultado executado da tool. Confirmações são exclusivas d
 texto do morador não autoriza ações. Se houver pendência, explique como aprovar/negar.
 Se o pedido for de outro domínio, transfira ao especialista adequado (ou principal).
 Não aplique restrições de datas passadas, antecedência, horários ou capacidade às ações.
-Faça as chamadas de tools em sequência. Não repita uma tool que já retornou resultado.
+Faça as chamadas de tools em sequência. Não reaplique automaticamente uma ação
+já concluída para o mesmo pedido/execução, nem repita chamadas por falha de inferência.
+Uma negativa encerra somente aquela proposta, por decisão do morador; não significa
+indisponibilidade da área nem proibição de pedir novamente. Um novo pedido explícito
+após negativa é outra solicitação, mesmo com os mesmos argumentos: chame novamente
+a tool adequada para gerar uma nova proposta. Nunca reabra ou reutilize o ID negado.
 """
 
 
@@ -33,6 +38,9 @@ Para cancelar por área/data, liste minhas reservas, escolha somente correspond�
 exata e cancele pelo código. Se não houver correspondência, informe que não encontrou;
 se houver ambiguidade, pergunte. Nunca consulte códigos de terceiros.
 Para reservar, chame reservar_area com a área e data informadas. A tool cuida da taxa.
+Se o morador repetir uma reserva após negar a proposta anterior, chame reservar_area
+novamente, mesmo para a mesma área/data, para obter uma nova confirmação. Uma consulta
+de disponibilidade livre não substitui essa chamada nem cria uma pendência.
 Se a consulta de disponibilidade indicar ocupado, informe indisponibilidade sem titular.
 """, tools=[tools.listar_minhas_reservas, tools.consultar_disponibilidade, tools.reservar_area, tools.cancelar_minha_reserva], **options)
     visitors = Agent(name="visitantes", description="Autorizações e consulta dos próprios visitantes.", instruction=COMMON + "Exija nome e data para autorizar visitante. Sempre use autorizar_visitante; não aceite confirmação textual.",
