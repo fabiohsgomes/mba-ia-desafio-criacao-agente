@@ -11,7 +11,7 @@ A estratégia aprovada persiste confirmações vinculadas à sessão e à execu�
 
 Essa infraestrutura de execução com intervenção humana é parte crítica do runtime de IA. O candidato reúne persistência, retomada e controle de execução; não pretende transformar cada condição de aprovação em ADR independente. A escolha do SQLite único e da transação compartilhada pertence ao módulo DATA e a topologia dos especialistas pertence ao módulo AGENT.
 
-O requisito original entrou no README em 2026-09-17, no commit `chore: enunciado e dados do desafio`. O documento de decisões de 2026-10-15 explicita o vínculo persistido e a atomicidade por ação, mas ainda está não rastreado no Git. Nenhum histórico comprova que essa retomada funciona em ADK 2.12.0.
+O requisito original foi registrado em 2026-09-17, no commit `be87e1d`. O documento de decisões de 2026-10-15 explicita o vínculo persistido e a atomicidade por ação, mas ainda está não rastreado no Git. Nenhum histórico comprova que essa retomada funciona em ADK 2.12.0.
 
 ## Why This Might Deserve an ADR
 
@@ -38,12 +38,13 @@ Passa os 3 E's: define integração estrutural, o motivo precisa ser compreendid
 
 ## Evidence Found in Codebase
 
+A retomada só funciona quando a resposta à confirmação chega ao agente que a solicitou, escolhido pelo Runner. Topologia, bloqueios de transferência, configuração de retomada do App e serviço de sessões podem alterar esse encaminhamento. O alerta original relatava diferenças nas versões `2.2.0` e `2.9.1`, inclusive entre execução em memória e persistida; não constitui validação de `2.12.0`. Um retorno HTTP sem erro pode ocorrer sem executar a ação. Por isso, aprovação e efeito devem ser verificados com sessões persistidas e após reiniciar a API, além da inspeção no ambiente de desenvolvimento do ADK.
+
 ### Key Files
 
 - [Decisões: confirmações persistidas](../../../../decisoes.md#confirmações-persistidas), linhas 119–131: vínculo com execução, retomada, efeito único e eventos.
 - [Decisões: mensagem durante pendência](../../../../decisoes.md#7-nova-mensagem-durante-confirmação-pendente), linhas 82–88: impedir outra execução até resolver a pendência.
 - [PRD RF-007](../../../../PRD.md#rf-007-responder-confirmação-e-retomar-execução), linhas 249–271: transação compartilhada aprovada e integração ADK a comprovar.
-- [README](../../../../../README.md#dicas-finais), linha 282: alerta original sobre o Runner alcançar o agente solicitante; é evidência do enunciado, não teste deste projeto.
 
 ### Code Evidence
 
@@ -61,7 +62,7 @@ A integração ADK deve compartilhar a transação, sem commits independentes.
 
 ### Impact Analysis
 
-- README: um commit relevante, 2026-09-17, sem implementação do runtime.
+- Escopo inicial do projeto: um commit relevante, 2026-09-17, sem implementação do runtime.
 - PRD e decisões: documentos locais de 2026-10-15 sem commits; não há histórico de correções ou migrações.
 - Cinco módulos previstos; arquivos de código e schema ainda não definidos.
 - ADK 2.12.0, subagentes por transferência e SQLite precisam ser testados juntos, inclusive com confirmação pendente antes do reinício.

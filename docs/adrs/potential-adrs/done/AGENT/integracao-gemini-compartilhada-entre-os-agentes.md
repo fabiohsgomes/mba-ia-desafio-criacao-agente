@@ -9,7 +9,7 @@
 
 Decisão documental aprovada: integrar os quatro agentes ao Gemini mediante chave do Google AI Studio e compartilhar o identificador de modelo configurável. O objeto arquitetural é a dependência externa de inferência e sua estratégia comum entre agentes; o valor `gemini-3.8-flash` e o nome `GEMINI_MODEL` são detalhes dessa estratégia, sem candidatura separada.
 
-O README exige Gemini e chave do Google AI Studio desde o commit `be87e1d`, de 17/09/2026, `chore: enunciado e dados do desafio`. O compartilhamento entre os quatro agentes foi registrado nas decisões datadas de 15/10/2026, não rastreadas no snapshot. Não existe integração executável, nem evidência de acesso, cota ou teste do modelo escolhido neste projeto.
+O requisito original exige Gemini e chave do Google AI Studio desde o commit `be87e1d`, de 17/09/2026. O compartilhamento entre os quatro agentes foi registrado nas decisões datadas de 15/10/2026, não rastreadas no snapshot. Não existe integração executável, nem evidência de acesso, cota ou teste do modelo escolhido neste projeto.
 
 ## Por que pode merecer uma ADR
 
@@ -34,9 +34,10 @@ Passa pelos 3 E: estrutural (integração de IA central), evidente (razão do co
 
 ## Evidências encontradas no repositório
 
+O requisito original exige modelos Gemini com chave do Google AI Studio e permite escolher o modelo de cada agente. A seleção deve considerar a documentação oficial e os limites ativos do projeto, que podem mudar; o fluxo de avaliação demanda algumas dezenas de chamadas. A chave deve ficar fora do Git, em `.env`, e `.env.example` deve conter somente os nomes das variáveis, sem valores. O compartilhamento do modelo entre os quatro agentes é uma decisão local, sem acesso ou cota comprovados por este documento.
+
 ### Arquivos principais
 
-- [README.md](../../../../../README.md#L36), linhas 36–37: requisito de Gemini e chave do Google AI Studio; seleção de modelo deixada ao implementador.
 - [decisoes.md](../../../../decisoes.md#L54), linhas 54–62 e 137–138: compartilhamento, justificativa e verificação pendente.
 - [PRD.md](../../../../PRD.md#L140), linha 140: ausência de política aprovada sem repetição automática diante de falha externa.
 - [PRD.md](../../../../PRD.md#L459), linhas 459–462 e 497–499: estratégia comum e validação de acesso pendente.
@@ -54,14 +55,14 @@ Trechos literais de `docs/decisoes.md`:
 
 ### Análise de impacto e histórico
 
-- Consultados logs de introdução e recentes dos documentos e busca por palavras-chave no histórico. Só há o commit inicial do enunciado; não há migração de provedor ou validação de inferência versionada.
+- Consultados logs de introdução e recentes dos documentos e busca por palavras-chave no histórico. Só há o commit inicial do documento de requisitos; não há migração de provedor ou validação de inferência versionada.
 - A data de aprovação documental é 15/10/2026; não é data de implantação.
 - Evidências em três documentos compartilhados e zero arquivos de integração executável.
 - Afeta AGENT e atendimento de RESERVA, VISITA e REG, com consequências para API e SESSION quando a execução externa falha.
 
 ### Alternativas observáveis
 
-O README deixa livre o modelo de cada agente; o documento posterior adota um modelo compartilhado. Não houve comparação entre provedores ou modelos; não há fallback automático aprovado. Não inventar seleção por custo ou qualidade sem evidência.
+O requisito original deixa livre o modelo de cada agente; o documento posterior adota um modelo compartilhado. Não houve comparação entre provedores ou modelos; não há fallback automático aprovado. Não inventar seleção por custo ou qualidade sem evidência.
 
 ## Perguntas para a ADR formal
 

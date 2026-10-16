@@ -16,7 +16,7 @@ A numeração **ADR-XXX** é provisória, conforme o comando `adr-generate`; cad
 | DATA | [Persistência em banco SQLite único com transação compartilhada](DATA/ADR-XXX-persistencia-em-banco-sqlite-unico-com-transacao-compartilhada.md) | 0 |
 | REG | [Recuperação local do regulamento com contexto seletivo](REG/ADR-XXX-recuperacao-local-do-regulamento-com-contexto-seletivo.md) | 0 |
 
-O responsável confirmou que não houve comparação de alternativas: as escolhas atendem ao enunciado e às decisões locais aprovadas. As lacunas comparativas foram encerradas com esse esclarecimento.
+O responsável confirmou que não houve comparação de alternativas: as escolhas atendem ao documento de requisitos e às decisões locais aprovadas. As lacunas comparativas foram encerradas com esse esclarecimento.
 
 Não há marcadores de decisão pendente nem ADRs em `needs-input/`. Foram aprovados serviço de sessões próprio, manutenção do modelo atual com validação de acesso/cota e nenhuma repetição automática do Gemini. Todas as ADRs continuam sujeitas à implementação e aos testes previstos.
 

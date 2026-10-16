@@ -9,7 +9,7 @@
 O atendimento conversacional do Residencial Aurora utiliza Google ADK
 com um principal e três especialistas para reservas, visitantes e
 regulamento.
-O enunciado exige modelos Gemini e acesso pelo Google AI Studio,
+O documento de requisitos exige modelos Gemini e acesso pelo Google AI Studio,
 deixando livre a escolha do modelo de cada agente.
 A implementação precisa definir uma estratégia de inferência comum
 ao atendimento e distinguir disponibilidade externa de efeitos
@@ -24,13 +24,20 @@ modelo aprovado, sem tornar consultas diretas de verificação
 dependentes da inferência.
 O acesso, a cota e o funcionamento da integração não foram comprovados.
 
-O requisito de Gemini consta do enunciado introduzido em 17/09/2026,
+O requisito de Gemini consta do documento de requisitos introduzido em 17/09/2026,
 conforme o histórico já registrado na identificação do candidato.
 A estratégia compartilhada foi aprovada documentalmente em 15/10/2026,
 data desta decisão.
 O status Aceita descreve a aprovação arquitetural, sem declarar que
 a integração, seus testes ou a validação de acesso já foram concluídos.
 Não há implementação executável como evidência neste snapshot.
+
+O requisito original exige modelos Gemini com chave do Google AI Studio e permite
+escolher o modelo de cada agente. A seleção deve considerar a documentação oficial e os
+limites ativos do projeto, que podem mudar; o fluxo de avaliação demanda algumas dezenas
+de chamadas. A chave deve ficar fora do Git, em `.env`, e `.env.example` deve conter
+somente os nomes das variáveis, sem valores. O compartilhamento do modelo entre os
+quatro agentes é uma decisão local, sem acesso ou cota comprovados por este documento.
 
 ## Motivadores da decisão
 
@@ -46,7 +53,7 @@ Não há implementação executável como evidência neste snapshot.
 2. Escolher o modelo Gemini individualmente para cada agente.
 
 A primeira opção é a decisão aprovada.
-A segunda é uma possibilidade explicitamente permitida pelo enunciado,
+A segunda é uma possibilidade explicitamente permitida pelo documento de requisitos,
 sem evidência de que tenha sido submetida a avaliação comparativa.
 Sua inclusão registra a alternativa documental disponível, sem afirmar
 que houve experimentos ou uma rejeição fundamentada em métricas.
@@ -54,7 +61,7 @@ que houve experimentos ou uma rejeição fundamentada em métricas.
 O responsável confirmou que não houve comparação entre modelo comum e
 modelos por agente. A escolha atende ao requisito de Gemini e adota o
 compartilhamento por simplicidade, conforme a decisão local aprovada.
-O enunciado não obriga que os agentes usem o mesmo modelo.
+O documento de requisitos não obriga que os agentes usem o mesmo modelo.
 
 ## Resultado da decisão
 
@@ -89,7 +96,7 @@ o efeito persistido correspondente.
 
 ### Modelo Gemini escolhido por agente
 
-A liberdade de escolha individual está documentada no enunciado.
+A liberdade de escolha individual está documentada no documento de requisitos.
 As fontes não apresentam vantagens, desvantagens ou resultados de
 avaliação dessa alternativa.
 Não são atribuídos ganhos de qualidade ou custos de manutenção sem
@@ -126,5 +133,3 @@ a decisão antes de apresentar uma alternativa como aprovada.
   justificativa e validação de acesso e cota pendente.
 - [docs/PRD.md:140](../../../PRD.md#L140): falhas externas e política
   aprovada de ausência de repetição automática.
-- [README.md:37](../../../../README.md#L37): requisito de Gemini e
-  liberdade de escolha do modelo por agente.

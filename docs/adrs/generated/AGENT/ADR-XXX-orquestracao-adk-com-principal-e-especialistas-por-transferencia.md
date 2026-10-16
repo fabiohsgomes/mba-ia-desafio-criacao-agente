@@ -8,7 +8,7 @@
 
 O assistente do Residencial Aurora atenderá moradores sobre reservas,
 visitantes e regulamento por uma API local.
-O enunciado exige Google ADK, um agente principal e pelo menos dois
+O documento de requisitos exige Google ADK, um agente principal e pelo menos dois
 especialistas, deixando livres a divisão de responsabilidades e a forma
 de acionamento.
 As consultas e alterações do domínio devem ocorrer por tools, com regras
@@ -19,18 +19,28 @@ ou isolamento dependentes das decisões do modelo.
 O trabalho pode parar aguardando uma confirmação do morador.
 A aprovação precisa alcançar o especialista que originou a pendência,
 inclusive quando a API reiniciar antes da resposta.
-O enunciado alerta que a retomada depende da combinação entre topologia,
+O documento de requisitos alerta que a retomada depende da combinação entre topologia,
 persistência e runtime do ADK.
 Assim, separar os domínios também estabelece uma dependência entre a
 identidade do especialista e a continuidade da execução conversacional.
 
-O enunciado já estava presente no commit inicial de 17/09/2026.
+O documento de requisitos já estava presente no commit inicial de 17/09/2026.
 A escolha específica desta topologia foi aprovada documentalmente em
 15/10/2026, data adotada nesta ADR.
 O status Aceita registra essa aprovação, enquanto implementação e
 validação técnica permanecem pendentes.
 Não há evidência de funcionamento da combinação escolhida no snapshot
 que fundamentou a identificação.
+
+O requisito original exige Google ADK série 2, em versão exata igual ou superior a
+`2.2.0`, um agente principal e pelo menos dois especialistas, com modo de acionamento
+livre. Reservas e visitantes devem ser lidos e gravados por tools. A retomada da
+confirmação precisa alcançar o agente solicitante: o Runner escolhe esse agente, e
+topologia, bloqueios de transferência, configuração de retomada do App e serviço de
+sessões podem influenciar o resultado. Aprovação com sucesso HTTP não comprova execução;
+é necessário verificar o efeito com sessão persistida e após reinício. O alerta original
+descrevia testes em `2.2.0` e `2.9.1`, sem comprovar a combinação `2.12.0` deste
+projeto.
 
 ## Motivadores da decisão
 
@@ -46,13 +56,13 @@ que fundamentou a identificação.
 1. Google ADK com principal e três especialistas por transferência.
 
 Essa é a única opção com aprovação específica nas fontes.
-O enunciado admite outras quantidades de especialistas e formas de
+O documento de requisitos admite outras quantidades de especialistas e formas de
 acionamento, mas essa liberdade não comprova avaliação de alternativas.
 Não há registro de comparação entre padrões concretos de delegação.
 
 O responsável confirmou que não houve comparação de topologias ou formas
-de delegação. A escolha atende ao enunciado e concretiza a divisão por
-domínio aprovada, dentro da liberdade de acionamento que o desafio permite.
+de delegação. A escolha atende ao documento de requisitos e concretiza a divisão por
+domínio aprovada, dentro da liberdade de acionamento que o projeto permite.
 
 ## Resultado da decisão
 
@@ -120,5 +130,3 @@ comportamento implementado.
   topologia, justificativa e exigência de retomada do solicitante.
 - [docs/PRD.md:414](../../../PRD.md#L414): arquitetura conversacional,
   responsabilidades e trade-off da transferência entre especialistas.
-- [README.md:54](../../../../README.md#L54): exigência de principal e
-  especialistas; o alerta de retomada aparece também na linha 282.

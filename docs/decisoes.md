@@ -159,9 +159,9 @@ Referências oficiais consultadas em 15/10/2026:
 
 ## Esclarecimento sobre justificativas e alternativas
 
-Em 15/10/2026, o responsável esclareceu que não houve comparação de alternativas: as escolhas foram feitas para atender aos requisitos do enunciado em `README.md`, com os critérios de simplicidade e separação de responsabilidades já registrados neste documento. Não se exige avaliação comparativa retrospectiva para completar as ADRs.
+Em 15/10/2026, o responsável esclareceu que não houve comparação de alternativas. As escolhas foram feitas para atender aos requisitos do projeto: API Python com Google ADK e Gemini, principal e especialistas, confirmação de cobrança e acesso, isolamento por apartamento, persistência após reinício, consulta seletiva do regulamento e exclusividade de reserva por área/data, com os critérios de simplicidade e separação de responsabilidades já registrados neste documento. Não se exige avaliação comparativa retrospectiva para completar as ADRs.
 
-O enunciado exige, entre outros pontos, Google ADK, Gemini, principal e especialistas e as cinco garantias. FastAPI/Pydantic, um banco SQLite, três especialistas por transferência e um modelo compartilhado concretizam esses requisitos dentro das escolhas permitidas; não são todos imposições do enunciado. Permanecem válidas as pendências de definição técnica e validação, incluindo comprovação do serviço de sessões próprio na transação compartilhada, retomada persistida e acesso/cota do Gemini. A política aprovada é não repetir automaticamente chamadas ao modelo.
+O documento de requisitos exige, entre outros pontos, Google ADK, Gemini, principal e especialistas e as cinco garantias. FastAPI/Pydantic, um banco SQLite, três especialistas por transferência e um modelo compartilhado concretizam esses requisitos dentro das escolhas permitidas; são decisões de arquitetura aprovadas. Permanecem válidas as pendências de definição técnica e validação, incluindo comprovação do serviço de sessões próprio na transação compartilhada, retomada persistida e acesso/cota do Gemini. A política aprovada é não repetir automaticamente chamadas ao modelo.
 
 
 ## Revisão aprovada: banco único e atomicidade por ação
@@ -170,7 +170,7 @@ Em 15/10/2026, o responsável substituiu a decisão anterior de dois arquivos SQ
 
 A transação abrange todas as gravações locais decorrentes da ação, inclusive efeitos, conclusão da confirmação, estado e eventos correspondentes. Chamadas ao Gemini e espera pela aprovação acontecem fora da transação de escrita; não se mantém uma transação aberta durante uma conversa inteira. Cada unidade de persistência deve ser atômica. Negativa e recusa por indisponibilidade também persistem seu resultado e encerramento de forma consistente, sem efeito de domínio.
 
-A integração de persistência do ADK deve permitir compartilhar a unidade de trabalho com as tools. Se o serviço utilizado executar commits próprios, precisará ser adaptado para cumprir esta decisão; apontá-lo para o mesmo arquivo não basta. A solução concreta e sua comprovação permanecem parte da validação da integração, sem compatibilidade presumida. A contenção entre escritores passa a ocorrer no mesmo arquivo e deve ser tratada sem quebrar a disputa concorrente exigida pelo enunciado.
+A integração de persistência do ADK deve permitir compartilhar a unidade de trabalho com as tools. Se o serviço utilizado executar commits próprios, precisará ser adaptado para cumprir esta decisão; apontá-lo para o mesmo arquivo não basta. A solução concreta e sua comprovação permanecem parte da validação da integração, sem compatibilidade presumida. A contenção entre escritores passa a ocorrer no mesmo arquivo e deve ser tratada sem quebrar a disputa concorrente exigida pelo documento de requisitos.
 
 
 ## Escolhas aprovadas para integração e validação

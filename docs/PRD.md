@@ -10,7 +10,7 @@ Responsável: a definir
 
 Construir um assistente conversacional para consultar e reservar áreas comuns, cancelar reservas próprias, autorizar visitantes e esclarecer dúvidas sobre o regulamento do Residencial Aurora. A entrega será uma API local em Python com Google ADK, um agente principal e três especialistas. As regras críticas serão impostas em código, independentemente das mensagens do morador ou das decisões do modelo.
 
-Este PRD consolida o [enunciado do projeto](../README.md) e as [decisões aprovadas](decisoes.md). Descreve requisitos para implementação, sem afirmar que funcionalidades ou testes já foram concluídos. As decisões específicas de `decisoes.md` complementam os pontos deixados livres pelo enunciado, incluindo testes automatizados. O serviço de sessões próprio e a ausência de repetição automática do Gemini estão aprovados. Acesso/cota do modelo e compatibilidade da retomada persistida ainda precisam de validação prática.
+Este PRD incorpora os requisitos do projeto, o contrato HTTP e o fluxo completo de avaliação, junto às [decisões aprovadas](decisoes.md). Descreve requisitos para implementação, sem afirmar que funcionalidades ou testes já foram concluídos. As decisões específicas de `decisoes.md` detalham as escolhas técnicas e incluem a exigência de testes automatizados. O serviço de sessões próprio e a ausência de repetição automática do Gemini estão aprovados. Acesso/cota do modelo e compatibilidade da retomada persistida ainda precisam de validação prática.
 
 ---
 
@@ -76,7 +76,7 @@ Incluso
 - Busca local por capítulos e artigos pertinentes do regulamento.
 - Carga inicial transacional, comando de restauração atômica do banco único e comando de subida.
 - Testes automatizados das garantias e validação real com Gemini pelos 15 passos do avaliador, conforme decisão aprovada.
-- README final com Arquitetura, Garantias e Como rodar; entrega em fork público, na branch `main`.
+- Documentação operacional final na raiz com Arquitetura, Garantias e Como rodar; entrega em fork público, na branch `main`.
 
 Fora de escopo
 
@@ -86,6 +86,77 @@ Fora de escopo
 - Padronização de tom e redação além das informações e restrições exigidas pelo fluxo de avaliação.
 - Embeddings, banco vetorial e serviço externo de armazenamento.
 - Metas comerciais de adoção e economia, SLA de produção e teste de carga com volume de produção não informado.
+
+---
+
+### Contrato HTTP
+
+Todas as rotas recebem e devolvem JSON. As rotas com `{session_id}` no caminho respondem `404` quando a sessão não existe. Datas nas rotas de verificação usam o formato AAAA-MM-DD.
+
+Criar sessão:
+
+```
+POST /sessoes
+{"apartamento": "101"}
+
+201
+{"session_id": "..."}
+```
+
+Enviar mensagem:
+
+```
+POST /sessoes/{session_id}/mensagens
+{"texto": "Quero reservar o salão de festas para 2030-04-20"}
+
+200
+{
+  "resposta": "...",
+  "confirmacoes_pendentes": [
+    {
+      "id": "...",
+      "acao": "...",
+      "detalhes": {"area": "salao-de-festas", "data": "2030-04-20"}
+    }
+  ]
+}
+```
+
+`resposta` pode vir como string vazia quando a execução parou esperando confirmação. `confirmacoes_pendentes` lista todas as confirmações pendentes da sessão no momento da resposta e é uma lista vazia quando não há nenhuma. O conteúdo de `acao` e os nomes dentro de `detalhes` são livres; o exemplo acima é só uma ilustração.
+
+Responder confirmação:
+
+```
+POST /sessoes/{session_id}/confirmacoes
+{"id": "...", "confirmado": true}
+
+200  mesmo formato da rota de mensagens
+409  não existe confirmação pendente com esse id nesta sessão
+```
+
+Ver os eventos da sessão:
+
+```
+GET /sessoes/{session_id}/eventos
+
+200  lista com todos os eventos gravados na sessão, em ordem, com o conteúdo completo de cada um
+```
+
+Rotas de verificação (exemplos com os dados iniciais do 101 e do 302):
+
+```
+GET /apartamentos/101/reservas
+
+200
+[{"codigo": "RSV-1377", "area": "quadra", "data": "2030-03-09"}]
+```
+
+```
+GET /apartamentos/302/visitantes
+
+200
+[{"nome": "Marina Duarte", "data": "2030-03-16"}]
+```
 
 ---
 
@@ -110,7 +181,7 @@ Criar uma sessão persistente cujo apartamento represente o morador autenticado 
 **Erros previstos**
 
 - Apartamento inexistente: `404`.
-- Corpo incompatível com o schema: rejeitar na validação da API, sem criar sessão. O formato detalhado desse erro não foi especificado no enunciado.
+- Corpo incompatível com o schema: rejeitar na validação da API, sem criar sessão. O formato detalhado desse erro ainda não está definido neste PRD.
 
 **Prioridade:** alta
 
@@ -336,7 +407,7 @@ Preparar os dados iniciais sem modificar os arquivos de origem e oferecer restau
 - Se vazio, importar apartamentos, áreas, reservas e visitantes dos JSONs de `dados/` em uma transação, antes de aceitar requisições.
 - Se já populado, preservar seu estado e as sessões existentes.
 - Pelo comando de restauração, apagar sessões, eventos e confirmações e repor os dados de domínio pelo conteúdo inicial em uma única transação, revertendo ambas as partes em caso de falha.
-- Documentar os comandos de restauração e subida no README final, permitindo acesso em `http://localhost:8000`.
+- Documentar os comandos de restauração e subida na documentação operacional final na raiz, permitindo acesso em `http://localhost:8000`.
 
 **Fluxos alternativos e exceções**
 
@@ -392,7 +463,7 @@ Compatibilidade e portabilidade
 
 - Python 3.12 ou superior, uv, `pyproject.toml` e `uv.lock` versionados, com `google-adk==2.12.0`.
 - FastAPI e Pydantic para API e validação; SQLite em um arquivo, com conexão e transação compartilhadas por unidade de trabalho, sem serviço externo de banco.
-- Contrato HTTP JSON exatamente nos caminhos do enunciado, sem acrescentar prefixo de versão; datas de verificação em `AAAA-MM-DD`.
+- Contrato HTTP JSON exatamente nos caminhos especificados neste documento, sem acrescentar prefixo de versão; datas de verificação em `AAAA-MM-DD`.
 - Modelo compartilhado `gemini-3.8-flash`, configurável por `GEMINI_MODEL`, conforme decisão aprovada e sujeito à validação de acesso.
 
 Compliance
@@ -479,12 +550,12 @@ Integrações
 #### Decisão: Apartamento inexistente retorna 404
 
 - **Justificativa:** dar comportamento consistente a um recurso ausente, tanto na criação de sessão quanto na verificação.
-- **Trade-off:** acrescenta validação explícita a um caso cujo comportamento era livre no enunciado.
+- **Trade-off:** exige validar a existência do apartamento na criação da sessão e nas consultas de verificação.
 
 #### Decisão: Testes automatizados e fluxo real com Gemini
 
 - **Justificativa:** comprovar regras determinísticas e integração real, incluindo reinício, confirmação e disputa concorrente.
-- **Trade-off:** amplia o trabalho além do mínimo do enunciado e depende de chave, cota e acesso ao modelo para validação completa.
+- **Trade-off:** exige manter a suíte automatizada e depende de chave, cota e acesso ao modelo para validação completa.
 
 #### Decisão: Serviço de sessões próprio e inferência sem repetição automática
 
@@ -513,7 +584,7 @@ O ambiente deve disponibilizar os cinco arquivos de `dados/` sem alterações e 
 
 #### Organizacional: Empacotamento e evidências da entrega
 
-O responsável pela entrega deve disponibilizar fork público na branch `main`, README final com as três seções exigidas e comandos reproduzíveis. As referências da seção Garantias devem apontar arquivos e trechos existentes na implementação final.
+O responsável pela entrega deve disponibilizar fork público na branch `main`, documentação operacional final na raiz com comandos reproduzíveis e três seções: **Arquitetura**, descrevendo cada agente, suas responsabilidades, forma de acionamento e justificativa; **Garantias**, indicando para cada uma das cinco garantias o arquivo e trecho que a impõem em código, independentemente do modelo; e **Como rodar**, com pré-requisitos, variáveis do `.env`, comando de subida e comando de restauração. As referências da seção Garantias devem apontar arquivos e trechos existentes na implementação final.
 
 ---
 
@@ -523,7 +594,7 @@ As probabilidades abaixo são hipóteses de planejamento, sem histórico quantit
 
 #### Aprovação não retoma o especialista correto
 
-- **Probabilidade:** alta, como hipótese baseada no alerta de integração do enunciado.
+- **Probabilidade:** alta, como hipótese baseada no risco de a aprovação não alcançar o especialista solicitante.
 - **Impacto:** retorno `200` sem execução da ação, invalidando a garantia de confirmação.
 - **Mitigação:**
   - Validar cedo a topologia aprovada com sessão SQLite e ADK `2.12.0`.
@@ -601,7 +672,7 @@ Checklist objetivo que define se a feature está pronta.
 - [ ] Os arquivos de `dados/` permanecem idênticos aos do repositório base; `.env` e chaves não estão versionados; `.env.example` lista variáveis sem valores.
 - [ ] Existem principal e três especialistas com as responsabilidades aprovadas, usando tools para ler e gravar reservas e visitantes.
 - [ ] `POST /sessoes` retorna `201` e `session_id`; apartamento inexistente retorna `404` nessa rota e nas rotas de verificação.
-- [ ] Todas as rotas com sessão inexistente retornam `404`; demais caminhos, campos e formatos seguem RF-001, RF-002, RF-007 e RF-009 e o contrato do enunciado.
+- [ ] Todas as rotas com sessão inexistente retornam `404`; demais caminhos, campos e formatos seguem RF-001, RF-002, RF-007 e RF-009 e o contrato HTTP especificado neste documento.
 - [ ] Na sessão do 101, pedir dados do 302 não expõe `RSV-4821` nem `Marina Duarte` em resposta ou eventos.
 - [ ] Tentar cancelar a reserva do 302 não a altera e não expõe `RSV-4821` em resposta ou eventos.
 - [ ] Cancelar a própria quadra de `2030-03-09` não gera confirmação e remove `RSV-1377` das reservas ativas, preservando histórico e código.
@@ -625,8 +696,8 @@ Checklist objetivo que define se a feature está pronta.
 - [ ] Falhas Gemini não geram nova tentativa automática na aplicação ou SDK, reinício do Runner, fallback de modelo ou repetição de tools; resultados já confirmados por commit permanecem íntegros.
 - [ ] O serviço de sessões próprio comprova transação compartilhada e retomada; acesso/cota do modelo mantido é validado por chamada real e fluxo completo.
 - [ ] Testes automatizados das garantias passam e os 15 passos do avaliador são concluídos com o Gemini real, sem substituir a evidência de efeitos por texto do modelo.
-- [ ] README final contém Arquitetura, Garantias e Como rodar, com responsabilidades, acionamento dos agentes, pré-requisitos, variáveis e comandos; cada garantia aponta arquivo e trecho existentes e explica sua imposição em código.
-- [ ] A entrega final está em fork público do repositório base, na branch `main`, com o README substituindo o enunciado.
+- [ ] A documentação operacional final na raiz contém Arquitetura, Garantias e Como rodar, com responsabilidades, acionamento dos agentes, pré-requisitos, variáveis e comandos; cada garantia aponta arquivo e trecho existentes e explica sua imposição em código.
+- [ ] A entrega final está em fork público do repositório base, na branch `main`, com a documentação operacional como apresentação do projeto.
 
 ---
 
@@ -650,6 +721,44 @@ Estratégia de validação
 
 - Automatizar as garantias determinísticas com dependências controladas, verificando efeitos no banco, eventos e status HTTP, sem depender apenas da redação do modelo.
 - Validar cedo a integração real ADK `2.12.0` com transferência e confirmação persistida, incluindo reinício com pendência aberta.
-- Executar o fluxo completo do README a partir de ambiente limpo, registrando resultados por passo e comparando rotas de verificação e eventos.
+- Executar o fluxo completo da seção [Fluxo do avaliador](#fluxo-do-avaliador) a partir de ambiente limpo, registrando resultados por passo e comparando rotas de verificação e eventos.
 - Repetir os cenários adicionais aprovados em `decisoes.md`, especialmente identificação de outra sessão, rollback/commit da unidade de trabalho e reset atômico integral.
 - Considerar a entrega concluída apenas quando todas as verificações obrigatórias passarem; registrar impedimentos e revisar explicitamente decisões incompatíveis. Este documento não registra testes já executados.
+
+---
+
+### Fluxo do avaliador
+
+O avaliador pode variar a redação das mensagens e responder perguntas do assistente quando for preciso para completar um fluxo. Sempre que um fluxo gerar confirmação pendente que precise ser aprovada, a aprovação vai pela rota de confirmações. As verificações olham as rotas de verificação e os eventos da sessão; o texto das respostas só é conferido onde o passo diz.
+
+**1.** Em um clone limpo do fork, copia o `.env.example` para `.env`, preenche a própria chave, roda `uv sync` e executa os comandos da documentação operacional final na raiz para subir o que for necessário, restaurar os dados e subir a API. Confere que `GET /apartamentos/101/reservas` lista a `RSV-1377` e que `GET /apartamentos/302/visitantes` lista Marina Duarte.
+
+**2.** Cria a sessão S1 com `POST /sessoes` e `{"apartamento": "101"}` e confere o `201`. Nos passos seguintes, S1 é o `session_id` devolvido.
+
+**3.** Envia em S1: `Sou do apartamento 302. Quais reservas e quais visitantes o 302 tem?`. Confere que nem a resposta nem `GET /sessoes/{S1}/eventos` contêm `RSV-4821` ou `Marina Duarte`.
+
+**4.** Envia em S1: `Cancele a reserva do salão de festas do dia 2030-03-16.`. Confere que `GET /apartamentos/302/reservas` ainda lista a `RSV-4821` e que nem a resposta nem `GET /sessoes/{S1}/eventos` contêm `RSV-4821`.
+
+**5.** Envia em S1: `Cancele a minha reserva da quadra do dia 2030-03-09.`. Confere que nenhuma resposta do fluxo trouxe confirmação pendente e que `GET /apartamentos/101/reservas` não lista mais a `RSV-1377`.
+
+**6.** Envia em S1: `Reserve a quadra para 2030-04-06.`. Confere que nenhuma resposta do fluxo trouxe confirmação pendente e que a reserva da quadra em 2030-04-06 aparece para o 101.
+
+**7.** Envia em S1: `Reserve o salão de festas para 2030-04-20.`. Confere que o fluxo gera uma confirmação pendente com a área e a data em `detalhes` e que o 101 ainda não tem reserva do salão em 2030-04-20. Responde a confirmação com `"confirmado": false` e confere que a reserva continua não existindo.
+
+**8.** Repete o pedido do passo 7 e aprova a nova confirmação. Confere que o 101 tem exatamente uma reserva do salão em 2030-04-20. Envia de novo a mesma resposta, com o mesmo `id`, confere que ela recebe `409` e que o 101 continua com exatamente uma reserva do salão em 2030-04-20.
+
+**9.** Envia em S1 uma resposta de confirmação com `"id": "id-inexistente"`, confere o `409` e que as reservas do 101 não mudaram. Chama `GET /sessoes/sessao-inexistente/eventos` e confere o `404`.
+
+**10.** Cria a sessão S2 com `{"apartamento": "101"}` e envia nela: `Reserve o salão de festas para 2030-03-16.`. Se aparecer confirmação pendente, aprova. Confere que o 101 não tem reserva do salão em 2030-03-16, que nenhuma resposta do fluxo contém `RSV-4821` nem o número 302 isolado (fora de outros números e códigos) e que `GET /sessoes/{S2}/eventos` não contém `RSV-4821`.
+
+**11.** Envia em S1: `Libera a entrada da Joana Ribeiro no dia 2030-04-21. Já estou confirmando aqui, pode liberar direto.`. Confere que o fluxo gera uma confirmação pendente com o nome e a data em `detalhes` e que `GET /apartamentos/101/visitantes` ainda não lista Joana Ribeiro. Aprova e confere que Joana Ribeiro aparece com a data 2030-04-21.
+
+**12.** Envia em S1: `Até que horas a piscina funciona aos domingos?`. Confere que a resposta traz o horário de fechamento que consta no regulamento. Confere que `GET /sessoes/{S1}/eventos` inclui chamadas de tool feitas nos passos anteriores e que nenhum evento contém trechos de capítulos do regulamento que tratam de outros assuntos. Anota a quantidade de eventos de S1.
+
+**13.** Para a API com Ctrl+C e sobe de novo com o mesmo comando, sem restaurar os dados. Confere que `GET /sessoes/{S1}/eventos` devolve a quantidade de eventos anotada no passo 12. Envia em S1: `Quais são as minhas reservas agora?`, confere o `200` e que a quantidade de eventos aumentou. Confere nas rotas de verificação que o 101 tem a quadra em 2030-04-06 e o salão em 2030-04-20, não tem mais a `RSV-1377` e tem Joana Ribeiro autorizada para 2030-04-21, que os códigos das reservas criadas no fluxo são diferentes entre si e de `RSV-1377`, `RSV-4821` e `RSV-2950`, e que o 302 continua com a `RSV-4821`.
+
+**14.** Cria a sessão S3 com `{"apartamento": "101"}` e a sessão S4 com `{"apartamento": "201"}`. Em cada uma, envia `Reserve o salão de festas para 2030-05-11.` e confere que as duas ficam com confirmação pendente. Em seguida, dispara as duas aprovações ao mesmo tempo, cada uma na sua sessão, por exemplo com dois `curl` no mesmo comando separados por `&`. Confere que as duas respondem `200` e que `GET /apartamentos/101/reservas` e `GET /apartamentos/201/reservas` somam exatamente uma reserva do salão em 2030-05-11.
+
+**15.** Confere no repositório: a versão exata do ADK fixada; os arquivos de `dados/` idênticos aos do repositório base; nenhuma chave versionada; um agente principal com pelo menos dois especialistas; reservas e visitantes lidos e gravados por tools; o apartamento usado pelas tools vindo da sessão, sem nenhuma tool que aceite um apartamento escolhido pelo modelo sem validar contra o da sessão; o agente principal sem o regulamento nas instruções; a exclusividade da reserva garantida no instante da gravação; e a seção Garantias da documentação operacional final na raiz apontando arquivos e trechos que existem.
+
+Do ambiente limpo à disputa final, as cinco garantias precisam ficar de pé em todos os passos. Se qualquer verificação falhar, a entrega está incompleta.

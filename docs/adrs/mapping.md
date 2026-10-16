@@ -15,14 +15,14 @@ Não foram encontrados `pyproject.toml`, `uv.lock`, fontes Python, schemas SQL, 
 
 ### Histórico disponível
 
-O histórico local contém um único commit: `be87e1d`, de **17/09/2026 às 16:13:43 -03:00**, com mensagem `chore: enunciado e dados do desafio`, introduzindo README e os cinco arquivos de dados. O `.gitignore` também está rastreado. PRD e decisões não têm histórico versionado neste snapshot; a data de 15/10/2026 vem dos próprios documentos. Não há commits de implementação dos quais inferir adoção ou evolução de padrões de runtime.
+O histórico local contém um único commit: `be87e1d`, de **17/09/2026 às 16:13:43 -03:00**, introduzindo o escopo inicial do projeto e os cinco arquivos de dados. O `.gitignore` também está rastreado. PRD e decisões não têm histórico versionado neste snapshot; a data de 15/10/2026 vem dos próprios documentos. Não há commits de implementação dos quais inferir adoção ou evolução de padrões de runtime.
 
 ## Technology Stack
 
 | Camada | Presente no repositório | Escolha documentada para implementação |
 | --- | --- | --- |
 | Linguagem e dependências | Nenhum projeto Python ou lockfile | Python ≥ 3.12, uv, `pyproject.toml` e `uv.lock` versionados |
-| API e validação | Contrato HTTP JSON no README/PRD | FastAPI e Pydantic, execução local em `http://localhost:8000` |
+| API e validação | Contrato HTTP JSON consolidado no PRD | FastAPI e Pydantic, execução local em `http://localhost:8000` |
 | Orquestração de agentes | Responsabilidades descritas em documentos | Google ADK fixado em `2.12.0`, Runner/App, principal e três especialistas por transferência |
 | Modelo externo | Nenhuma integração executável | `gemini-3.8-flash` compartilhado, configurável por `GEMINI_MODEL`, com chave do Google AI Studio |
 | Estado conversacional | Nenhum banco ou schema | Serviço de sessões próprio do ADK sobre SQLite único compartilhado com o domínio |
@@ -37,7 +37,7 @@ As versões e tecnologias da última coluna são **decisões das fontes locais, 
 
 **Source Files:**
 
-- [README.md](../../README.md): enunciado, cinco garantias, contrato HTTP e fluxo de avaliação em 15 passos; ainda não é o README operacional final.
+- **Requisitos originais incorporados:** API Python local em `http://localhost:8000`, ADK série 2 com versão exata fixada, Gemini com chave do Google AI Studio, principal e pelo menos dois especialistas; confirmação de cobrança/acesso, isolamento por sessão, persistência no reinício, contexto seletivo do regulamento e exclusividade na gravação. O contrato HTTP e o fluxo completo de avaliação em 15 passos estão consolidados no [PRD](../PRD.md#fluxo-do-avaliador). A documentação operacional final deve descrever Arquitetura, Garantias e Como rodar.
 - [docs/PRD.md](../PRD.md): requisitos RF-001 a RF-010, arquitetura proposta, critérios de aceitação e riscos.
 - [docs/decisoes.md](../decisoes.md): decisões aprovadas e validações ainda necessárias, explicitamente anteriores à implementação.
 - [dados/](../../dados/): fontes iniciais de domínio e regulamento, inspecionadas para delimitar responsabilidades.
@@ -47,8 +47,8 @@ As versões e tecnologias da última coluna são **decisões das fontes locais, 
 - Arquitetura planejada: uma aplicação backend local com camada HTTP, orquestração multiagente, tools de domínio, persistência conversacional e de domínio no mesmo banco e recuperação local de conhecimento. Não há evidência de microserviços ou implantação distribuída.
 - Domínios identificados: reservas, visitantes e regulamento; apartamento é o limite de autorização das operações conversacionais.
 - O modelo conduz a conversa, enquanto autorização, confirmação, unicidade e isolamento devem ser impostos em código e armazenamento.
-- O enunciado permite escolhas que os documentos posteriores especificam: FastAPI/SQLite, três especialistas, bloqueio de novas execuções durante pendência, `404` para apartamento inexistente e reset que também limpa sessões.
-- Testes automatizados estão fora do mínimo do enunciado, mas foram incluídos expressamente nas decisões e no PRD; isso é ampliação aprovada, não evidência de testes existentes.
+- O documento de requisitos permite escolhas que os documentos posteriores especificam: FastAPI/SQLite, três especialistas, bloqueio de novas execuções durante pendência, `404` para apartamento inexistente e reset que também limpa sessões.
+- Testes automatizados foram incluídos expressamente nas decisões e no PRD; sua aprovação não constitui evidência de testes existentes.
 - Os limites funcionais não são diretórios implementados. Os IDs a seguir são fronteiras lógicas para análise posterior; nenhum caminho de código futuro é presumido.
 
 ## System Modules
@@ -71,7 +71,7 @@ A atribuição de acervo evita dupla contagem: os cinco arquivos de `dados/` per
 ### API: Contrato HTTP e inspeção
 
 - **Purpose:** receber clientes HTTP, validar entradas e expor conversa, confirmação, eventos e consultas diretas de avaliação.
-- **Location:** implementação ausente; contrato em `README.md` e `docs/PRD.md`.
+- **Location:** implementação ausente; contrato em `docs/PRD.md`.
 - **Key Components:** `POST /sessoes`; `POST /sessoes/{session_id}/mensagens`; `POST /sessoes/{session_id}/confirmacoes`; `GET /sessoes/{session_id}/eventos`; `GET /apartamentos/{numero}/reservas`; `GET /apartamentos/{numero}/visitantes`.
 - **Technologies:** FastAPI/Pydantic planejados; JSON e datas `AAAA-MM-DD` no contrato.
 - **Dependencies:** SESSION, AGENT e consultas diretas a DATA/RESERVA/VISITA. As rotas de verificação não passam pelo modelo.
@@ -148,12 +148,12 @@ A atribuição de acervo evita dupla contagem: os cinco arquivos de `dados/` per
 ### SUPPORT: Especificação, configuração e apoio ao desenvolvimento
 
 - **Purpose:** registrar requisitos/decisões e oferecer instruções de entrevistas para gerar documentos de produto e desenho técnico.
-- **Location:** `README.md`, `docs/PRD.md`, `docs/decisoes.md`, `docs/adrs/`, `.gitignore`, `.env.example` e `.agents/skills/`.
+- **Location:** `docs/PRD.md`, `docs/decisoes.md`, `docs/adrs/`, `.gitignore`, `.env.example` e `.agents/skills/`.
 - **Key Components:** 3 documentos de produto; 7 candidatos arquivados, 7 ADRs e 2 índices; 2 configurações; 2 skills locais, cada qual com `SKILL.md`, referência e configuração `agents/openai.yaml`.
 - **Technologies:** Markdown e YAML, sem runtime da aplicação.
 - **Dependencies:** demais módulos usam esse contexto como especificação; as skills não são os agentes Google ADK do produto.
 - **Patterns:** documentação orientadora e separação de segredos/configuração. A existência de `.env.example` não implica que esteja versionado: ele está não rastreado neste snapshot.
-- **Key Files:** [README](../../README.md), [PRD](../PRD.md), [decisões](../decisoes.md), [skill PRD](../../.agents/skills/prd-feature-interview/SKILL.md), [skill FDD](../../.agents/skills/fdd-feature-interview/SKILL.md), [.gitignore](../../.gitignore), [.env.example](../../.env.example).
+- **Key Files:** [PRD](../PRD.md), [decisões](../decisoes.md), [skill PRD](../../.agents/skills/prd-feature-interview/SKILL.md), [skill FDD](../../.agents/skills/fdd-feature-interview/SKILL.md), [.gitignore](../../.gitignore), [.env.example](../../.env.example).
 - **Scope:** pequeno no acervo — 27 arquivos de entrada, excluindo este mapa; este documento gerado fica em `docs/adrs/mapping.md` e não é componente de runtime.
 
 ## Cross-Cutting Concerns
@@ -187,7 +187,7 @@ Em 15/10/2026, a decisão foi revisada para um único banco e atomicidade por a�
 ## Verification Notes
 
 - Inventário de arquivos comuns/ocultos e rastreamento Git conferidos; nenhum `AGENTS.md` aplicável foi encontrado nos ancestrais ou no projeto.
-- README, PRD, decisões, estruturas dos JSONs e capítulos do regulamento inspecionados; contagens de dados verificadas no acervo local.
+- Escopo inicial do projeto, PRD, decisões, estruturas dos JSONs e capítulos do regulamento inspecionados; contagens de dados verificadas no acervo local.
 - Histórico Git consultado; não há evidência versionada de implementação a analisar.
 - Arquivos de dados sem diferenças locais em relação ao `HEAD`; não foi feita comparação remota com o repositório base.
 - Verificação documental apenas: nenhuma chamada Gemini, instalação de dependências, execução de API ou teste funcional foi realizada nesta fase.

@@ -9,7 +9,7 @@
 
 Decisão documental aprovada: usar Google ADK com Runner/App, um principal e três especialistas de reservas, visitantes e regulamento, acionados por transferência entre subagentes. A separação determina a distribuição de tools e contexto e a identidade do agente que precisa receber uma retomada. Não há código de runtime, dependência instalada ou teste que comprove essa arquitetura neste snapshot.
 
-O requisito de ADK e principal/especialistas aparece no README introduzido pelo commit `be87e1d`, de 17/09/2026, `chore: enunciado e dados do desafio`. A topologia exata e o pin `2.12.0` constam nas decisões datadas de 15/10/2026, ainda não rastreadas pelo Git. Essa é a data documental, não a data de adoção em código.
+O requisito de ADK e principal/especialistas foi introduzido no projeto pelo commit `be87e1d`, de 17/09/2026. A topologia exata e o pin `2.12.0` constam nas decisões datadas de 15/10/2026, ainda não rastreadas pelo Git. Essa é a data documental, não a data de adoção em código.
 
 ## Por que pode merecer uma ADR
 
@@ -34,12 +34,13 @@ Passa pelos 3 E: estrutural (runtime e delegação), evidente (por que transferi
 
 ## Evidências encontradas no repositório
 
+O requisito original exige Google ADK série 2, em versão exata igual ou superior a `2.2.0`, um agente principal e pelo menos dois especialistas, com modo de acionamento livre. Reservas e visitantes devem ser lidos e gravados por tools. A retomada da confirmação precisa alcançar o agente solicitante: o Runner escolhe esse agente, e topologia, bloqueios de transferência, configuração de retomada do App e serviço de sessões podem influenciar o resultado. Aprovação com sucesso HTTP não comprova execução; é necessário verificar o efeito com sessão persistida e após reinício. O alerta original descrevia testes em `2.2.0` e `2.9.1`, sem comprovar a combinação `2.12.0` deste projeto.
+
 ### Arquivos principais
 
 - [decisoes.md](../../../../decisoes.md#L28), linhas 28–52: versão, topologia, justificativa e dependência de retomada.
 - [PRD.md](../../../../PRD.md#L118), linhas 118–140: fluxo pelo Runner e interação com pendências.
 - [PRD.md](../../../../PRD.md#L414), linhas 414–416 e 449–457: Runner/App, transferência e trade-off.
-- [README.md](../../../../../README.md#L54), linhas 54–56 e 282–284: requisito base e alerta do enunciado sobre retomada; o relato de testes no enunciado não comprova a implementação deste projeto.
 
 ### Evidência documental — sem código executável
 
@@ -54,13 +55,13 @@ Trechos literais de `docs/decisoes.md`:
 ### Análise de impacto e histórico
 
 - Consultados `git log --follow --diff-filter=A`, log recente dos três documentos e busca por ADK/Gemini/agente/transferência.
-- O único commit disponível introduz o enunciado em 17/09/2026; não há evolução de implementação nem commit específico de escolha da topologia.
+- O único commit disponível introduz o documento de requisitos em 17/09/2026; não há evolução de implementação nem commit específico de escolha da topologia.
 - São três documentos compartilhados como evidência; zero arquivos de implementação AGENT.
 - Módulos afetados: AGENT, API, SESSION, RESERVA, VISITA e REG.
 
 ### Alternativas observáveis
 
-O README permite pelo menos dois especialistas e deixa livre o modo de acionamento; as decisões restringem a escolha a três e transferência. Não foi encontrado registro de comparação entre padrões concretos de delegação. Não presumir alternativas rejeitadas.
+O requisito original permite pelo menos dois especialistas e deixa livre o modo de acionamento; as decisões restringem a escolha a três e transferência. Não foi encontrado registro de comparação entre padrões concretos de delegação. Não presumir alternativas rejeitadas.
 
 ## Perguntas para a ADR formal
 

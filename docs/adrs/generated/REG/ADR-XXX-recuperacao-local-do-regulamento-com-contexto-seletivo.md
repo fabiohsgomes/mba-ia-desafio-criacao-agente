@@ -8,7 +8,7 @@
 
 O assistente do Residencial Aurora responde dúvidas a partir de um
 regulamento local em Markdown, organizado em capítulos e artigos.
-O enunciado exige consulta por assunto e proíbe que eventos da sessão
+O documento de requisitos exige consulta por assunto e proíbe que eventos da sessão
 contenham trechos de capítulos sobre assuntos alheios à pergunta.
 Também determina que o principal não receba o regulamento nas instruções.
 A resposta precisa ser fundamentada sem transportar contexto irrelevante
@@ -29,9 +29,16 @@ O status Aceita expressa aprovação da arquitetura, sem afirmar que exista
 segmentador, busca ou teste implementado. O algoritmo de seleção continua
 indefinido, e não há medição de qualidade, latência ou economia de tokens.
 
+As respostas sobre regras devem usar `dados/regulamento.md`, sem colocar o regulamento
+nas instruções do principal. Nenhum evento da sessão pode conter trechos de capítulos de
+assuntos alheios à pergunta: texto integral no histórico amplia o contexto de todas as
+chamadas seguintes. Na avaliação, a pergunta sobre o funcionamento da piscina aos
+domingos deve trazer o horário de fechamento da fonte; os eventos devem conter as
+chamadas de tools anteriores, sem capítulos irrelevantes.
+
 ## 2. Fatores da decisão
 
-- Responder com fundamento no regulamento fornecido pelo desafio.
+- Responder com fundamento no regulamento fornecido pelo projeto.
 
 - Impedir que capítulos irrelevantes entrem no contexto e nos eventos persistidos.
 
@@ -53,7 +60,7 @@ indefinido, e não há medição de qualidade, latência ou economia de tokens.
    de qualidade que tenha antecedido essa exclusão.
 
 O carregamento integral do regulamento é uma abordagem proibida pelo
-requisito, e não uma opção admissível para a solução deste desafio.
+requisito, e não uma opção admissível para a solução deste projeto.
 
 ## 4. Resultado da decisão
 
@@ -123,5 +130,4 @@ de consultar apenas conteúdo pertinente ao assunto.
 
 - [docs/decisoes.md:64](../../../decisoes.md#L64)
 - [docs/PRD.md:277](../../../PRD.md#L277)
-- [README.md:80](../../../../README.md#L80)
 - [dados/regulamento.md:149](../../../../dados/regulamento.md#L149)

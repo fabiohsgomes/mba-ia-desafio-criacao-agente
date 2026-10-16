@@ -10,7 +10,7 @@ Responsável: a definir
 
 Implementar o assistente completo como uma API local, integrando atendimento com Google ADK, regras determinísticas nas tools e persistência transacional. O problema técnico é preservar autorização, isolamento, continuidade e exclusividade mesmo quando o modelo recebe instruções adversariais, a API reinicia ou duas sessões disputam uma reserva.
 
-O contexto arquitetural é definido pelo [PRD](PRD.md), pelas [decisões aprovadas](decisoes.md) e pelas [sete ADRs](adrs/generated/README.md). Não existe HLD separado usado como fonte deste documento. O [enunciado](../README.md) é a referência do contrato HTTP e do fluxo de avaliação. Este FDD detalha a implementação futura; não declara código, acesso ao modelo ou testes concluídos.
+O contexto arquitetural é definido pelo [PRD](PRD.md), pelas [decisões aprovadas](decisoes.md) e pelas [sete ADRs](adrs/generated/indice.md). Não existe HLD separado usado como fonte deste documento. O contrato HTTP e os 15 passos de avaliação estão incorporados ao PRD, nas seções [Contrato HTTP](PRD.md#contrato-http) e [Fluxo do avaliador](PRD.md#fluxo-do-avaliador). Este FDD detalha a implementação futura; não declara código, acesso ao modelo ou testes concluídos.
 
 **Atores e fronteiras**
 
@@ -39,7 +39,7 @@ As escolhas confirmadas nesta entrevista são requisitos deste FDD. Detalhes nov
 
 | Objetivo | Medida ou invariante |
 | --- | --- |
-| Atender ao contrato do desafio | Todos os 15 passos do avaliador aprovados em execução real |
+| Atender ao contrato do projeto | Todos os 15 passos do avaliador aprovados em execução real |
 | Impedir autorização implícita | Zero reservas com taxa ou autorizações criadas antes de aprovação válida pela rota |
 | Executar confirmação uma única vez | Uma aprovação executável produz um efeito; negativa e identificadores inválidos produzem zero |
 | Preservar isolamento | Zero dados de terceiros nos resultados das tools, respostas ou eventos, inclusive sob prompt injection |
@@ -117,7 +117,7 @@ CREATE UNIQUE INDEX uq_acao_tool
 ON acoes(session_id, invocation_id, tool_call_id);
 ```
 
-O código da reserva é chave única para toda a tabela, inclusive canceladas e dados iniciais. Proposta: novos códigos `RSV-` seguidos de UUID completo; a restrição do banco continua obrigatória. Colisão não pode sobrescrever ou reutilizar código. Datas operacionais usam ISO `AAAA-MM-DD`, validadas como datas reais, sem bloquear datas passadas. Não estabelecer unicidade de visitante por nome/data, pois não é regra do enunciado.
+O código da reserva é chave única para toda a tabela, inclusive canceladas e dados iniciais. Proposta: novos códigos `RSV-` seguidos de UUID completo; a restrição do banco continua obrigatória. Colisão não pode sobrescrever ou reutilizar código. Datas operacionais usam ISO `AAAA-MM-DD`, validadas como datas reais, sem bloquear datas passadas. Não estabelecer unicidade de visitante por nome/data, pois essa restrição não faz parte das regras de negócio aprovadas.
 
 Índices únicos parciais permitem restringir apenas as linhas ativas; a aplicação continua responsável por criar o esquema e tratar a violação esperada. [Referência oficial do SQLite](https://www.sqlite.org/partialindex.html).
 
@@ -131,7 +131,7 @@ O código da reserva é chave única para toda a tabela, inclusive canceladas e 
 6. Reinício comum não executa reset. Sessões, eventos, execuções e confirmações são reconstruídos do banco.
 7. Reset explícito, com a API parada: em uma transação, limpar tabelas operacionais/conversacionais e repor o domínio a partir das fontes. Uma falha reverte toda a operação. O requisito de API parada é uma proposta operacional para evitar apagar contexto em uso.
 
-Proposta de comandos a implementar: `uv run aurora serve` em `127.0.0.1:8000`, com um worker, e `uv run aurora reset`. Não são comandos disponíveis neste estágio documental. O README final deverá registrar os comandos efetivamente entregues.
+Proposta de comandos a implementar: `uv run aurora serve` em `127.0.0.1:8000`, com um worker, e `uv run aurora reset`. Não são comandos disponíveis neste estágio documental. A documentação operacional final na raiz deverá registrar os comandos efetivamente entregues.
 
 **Fluxo principal: mensagem e ação**
 
@@ -249,7 +249,7 @@ stateDiagram-v2
 - Não há rate limit de aplicação nem quota própria definida. A quota externa do Gemini não autoriza retries.
 - Proposta de validação: rejeitar strings vazias ou só com espaços para `texto` e apartamento. Sem limite numérico adicional de tamanho aprovado; não prometer payload ilimitado na infraestrutura subjacente. Não truncar eventos no endpoint.
 - Cada inferência tem timeout de 60 segundos por padrão. Isso não limita a duração total da requisição, que pode conter várias inferências distintas ou aguardar a sessão.
-- Compatibilidade preserva caminhos, nomes de campos e tipos do enunciado. Mudanças futuras incompatíveis exigem revisão explícita do contrato.
+- Compatibilidade preserva caminhos, nomes de campos e tipos do contrato HTTP. Mudanças futuras incompatíveis exigem revisão explícita do contrato.
 
 **Criar sessão**
 
@@ -490,7 +490,7 @@ Não usar sessão, apartamento, nome, data de reserva ou texto livre como dimens
 
 - Sem dashboard ou alertas automáticos no escopo aprovado.
 - Logs devem permitir identificar falhas de inferência, timeout, rollback, contenção e resultado de confirmação durante testes e avaliação.
-- README final documenta como executar com logs visíveis e correlacionar erros pelo `X-Request-ID`.
+- A documentação operacional final na raiz deve explicar como executar com logs visíveis e correlacionar erros pelo `X-Request-ID`.
 
 ---
 
@@ -522,7 +522,7 @@ Não inventar mínimos numéricos de dependências ainda não resolvidas. A impl
 | `SQLITE_BUSY_TIMEOUT_SECONDS` | `5` | Default aprovado na entrevista |
 | `AURORA_DB_PATH` | `var/aurora.sqlite3` | Proposta; resolver a partir da raiz do projeto e criar diretório se necessário |
 
-Proposta: habilitar chaves estrangeiras em cada conexão, manter journal em modo rollback e política de sincronização durável; não exigir WAL nesta entrega. A estratégia e os pragmas devem ser verificados nos testes de concorrência e falha. Arquivo de banco, arquivos auxiliares, `.env` e caches não entram no Git. `.env.example` lista os nomes de variáveis sem valores, conforme o enunciado.
+Proposta: habilitar chaves estrangeiras em cada conexão, manter journal em modo rollback e política de sincronização durável; não exigir WAL nesta entrega. A estratégia e os pragmas devem ser verificados nos testes de concorrência e falha. Arquivo de banco, arquivos auxiliares, `.env` e caches não entram no Git. `.env.example` lista os nomes de variáveis sem valores, conforme a política de configuração do projeto.
 
 **Garantias de compatibilidade**
 
@@ -545,7 +545,7 @@ Proposta: habilitar chaves estrangeiras em cada conexão, manter journal em modo
 
 Todos os itens abaixo são pendentes de implementação e execução. Testes com dublês validam o código determinístico; não comprovam integração real com Gemini ou retomada ADK.
 
-- [ ] **AT-01, ambiente:** `uv sync` instala o projeto com ADK exato, lockfile, scripts e um worker; README final tem Arquitetura, Garantias e Como rodar com referências reais.
+- [ ] **AT-01, ambiente:** `uv sync` instala o projeto com ADK exato, lockfile, scripts e um worker; a documentação operacional final na raiz tem Arquitetura, Garantias e Como rodar com referências reais.
 - [ ] **AT-02, contrato:** as seis operações HTTP preservam schemas, status, arrays vazios e datas; sessão/apartamento ausente retorna `404`, confirmação inválida `409` e corpo inválido `422`.
 - [ ] **AT-03, isolamento:** cenários adversariais dos passos 3, 4 e 10 não revelam `RSV-4821` ou `Marina Duarte` quando proibidos e não alteram o apartamento 302; inspecionar respostas, tools e eventos.
 - [ ] **AT-04, fonte de escopo:** nenhuma tool mutável ou de leitura própria aceita apartamento livre do modelo; deltas de estado e alegações de identidade não alteram o vínculo da sessão.

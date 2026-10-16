@@ -8,8 +8,8 @@
 
 O assistente precisa preservar conversas e efeitos de domínio após reinício,
 reproduzir o estado inicial e executar ações aprovadas uma única vez.
-Os JSONs fornecidos pelo desafio são fontes imutáveis, enquanto o estado
-operacional deve ser persistido. O enunciado permite escolher o armazenamento.
+Os JSONs fornecidos pelo projeto são fontes imutáveis, enquanto o estado
+operacional deve ser persistido. O documento de requisitos permite escolher o armazenamento.
 
 Em 15/10/2026, o responsável revisou a escolha anterior de dois arquivos
 SQLite para um banco único com transação compartilhada por ação.
@@ -21,6 +21,13 @@ O status Aceita registra a decisão documental revisada.
 Não comprova implementação, testes ou integração transacional do ADK.
 O commit introdutório dos dados, de 17/09/2026, não representa a adoção
 da arquitetura atual.
+
+Os arquivos `dados/apartamentos.json`, `dados/areas.json`, `dados/reservas.json`,
+`dados/visitantes.json` e `dados/regulamento.md` são fontes iniciais imutáveis. O
+armazenamento operacional é livre no requisito original; o comando de restauração deve
+repor reservas e visitantes a partir dessas fontes. Apagar sessões no reset era uma
+escolha permitida e foi aprovado localmente. Reiniciar a API sem reset deve preservar
+conversas, eventos, reservas e visitantes.
 
 ## 2. Fatores da decisão
 
@@ -40,7 +47,7 @@ da arquitetura atual.
 Não houve avaliação comparativa ou benchmark de produtos.
 A revisão decorre da análise da janela de falha entre efeito e confirmação
 e da preferência explícita do responsável pela solução de banco único.
-SQLite permanece uma escolha local permitida pelo enunciado.
+SQLite permanece uma escolha local permitida pelo documento de requisitos.
 
 ## 4. Resultado da decisão
 
@@ -99,4 +106,3 @@ Nenhuma migração de dados existentes é alegada, pois não há runtime impleme
 
 - [docs/decisoes.md:15](../../../decisoes.md#L15)
 - [docs/PRD.md:249](../../../PRD.md#L249)
-- [README.md:25](../../../../README.md#L25)

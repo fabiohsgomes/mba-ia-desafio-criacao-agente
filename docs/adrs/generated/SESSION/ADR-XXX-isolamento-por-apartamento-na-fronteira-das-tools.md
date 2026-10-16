@@ -20,12 +20,19 @@ Filtrar somente a redação final do assistente deixaria essa exposição possí
 Ao mesmo tempo, consultar disponibilidade exige examinar a agenda global,
 sem revelar quem reservou uma data nem o código da reserva correspondente.
 
-O requisito de isolamento consta do enunciado desde 17-09-2026.
+O requisito de isolamento consta do documento de requisitos desde 17-09-2026.
 As decisões de 15-10-2026 explicitam a origem confiável do apartamento
 e o controle dos resultados antes de sua inclusão nos eventos.
 Este registro formaliza uma decisão documental aprovada.
 O status Aceita não representa código concluído, teste executado ou
 evidência de proteção já demonstrada no runtime do assistente.
+
+O apartamento é definido uma única vez na criação da sessão e representa o morador
+autenticado. Mensagens posteriores não podem alterar esse vínculo, modificar reservas ou
+visitantes de outro apartamento nem trazer dados deles à conversa ou aos eventos. A
+proteção deve estar no código: as tools usam o apartamento da sessão e não um valor
+escolhido pelo modelo sem validação. A consulta global de disponibilidade pode informar
+apenas livre ou ocupado, sem titular nem código de reserva.
 
 ## Direcionadores da decisão
 
@@ -42,7 +49,7 @@ evidência de proteção já demonstrada no runtime do assistente.
 2. Depender apenas das instruções do prompt para que o modelo respeite
    o apartamento e não exponha ou altere dados de terceiros.
 
-A segunda opção é um contraponto explicitamente rejeitado pelo enunciado.
+A segunda opção é um contraponto explicitamente rejeitado pelo documento de requisitos.
 Ela não foi adotada nem apresentada como experimento executado.
 Não há comparação documentada entre bibliotecas ou serviços de autorização.
 A decisão trata da origem confiável e do local de imposição da restrição,
@@ -106,4 +113,3 @@ conforme o limite estabelecido para a entrega local do projeto.
 
 - [docs/decisoes.md:105](../../../decisoes.md#isolamento-por-apartamento): fronteira de acesso aprovada.
 - [docs/PRD.md:146](../../../PRD.md#rf-003-consultar-reservas-visitantes-e-disponibilidade-com-isolamento): consultas e resultados restritos à sessão.
-- [README.md:68](../../../../README.md#3-garantia-2-cada-sessão-pertence-a-um-apartamento): requisito original e rejeição de proteção dependente do prompt.

@@ -2,7 +2,7 @@
 
 Data da análise: 2026-10-15.
 
-Fase 2 executada para os oito módulos do [mapeamento](mapping.md), usando o [PRD](../PRD.md), as [decisões aprovadas](../decisoes.md), o enunciado e os dados locais. Os candidatos registram decisões documentais, sem implementação ou testes de runtime comprovados. Não são ADRs formais.
+Fase 2 executada para os oito módulos do [mapeamento](mapping.md), usando o [PRD](../PRD.md), as [decisões aprovadas](../decisoes.md), o documento de requisitos e os dados locais. Os candidatos registram decisões documentais, sem implementação ou testes de runtime comprovados. Não são ADRs formais.
 
 ## Analysis Progress
 
@@ -57,13 +57,13 @@ Nenhum candidato atingiu a faixa de 75–99 pontos. Não foram criados arquivos 
 - **RESERVA → DATA:** exclusividade no instante da gravação, histórico e códigos únicos devem ser comprovados por schema, transações e testes concorrentes.
 - **REG ↔ AGENT/SESSION:** recuperação deve limitar o retorno da tool antes de o conteúdo entrar no modelo e nos eventos completos.
 - **Gemini:** acesso, cota e comportamento do modelo escolhido permanecem sujeitos a verificação no projeto utilizado.
-- Na identificação, ainda não havia ADRs formais. A geração posterior está registrada no [índice das ADRs](generated/README.md); não foram identificadas sucessões. As sobreposições documentais desta rodada foram consolidadas conforme acima.
+- Na identificação, ainda não havia ADRs formais. A geração posterior está registrada no [índice das ADRs](generated/indice.md); não foram identificadas sucessões. As sobreposições documentais desta rodada foram consolidadas conforme acima.
 
 ## Método e limites
 
 Aplicados Step 0, filtros de granularidade/modelagem/fluxo, os três critérios estruturais e a pontuação do `adr-analyzer`. Bases não foram somadas quando uma escolha se enquadra em mais de uma categoria. As dimensões de custo e estabilidade são estimativas prospectivas, não esforço medido ou histórico operacional. A prioridade indica relevância documental, não urgência de implementação.
 
-O Git disponível contém apenas `be87e1d`, de 17/09/2026, com enunciado e dados iniciais. PRD e decisões estavam não rastreados durante a análise; suas datas não comprovam adoção em código. Não houve consulta externa, execução Gemini, instalação ou teste de aplicação nesta fase.
+O Git disponível contém apenas `be87e1d`, de 17/09/2026, com documento de requisitos e dados iniciais. PRD e decisões estavam não rastreados durante a análise; suas datas não comprovam adoção em código. Não houve consulta externa, execução Gemini, instalação ou teste de aplicação nesta fase.
 
 ## Summary
 
@@ -71,7 +71,7 @@ O Git disponível contém apenas `be87e1d`, de 17/09/2026, com enunciado e dados
 - Média prioridade: **0 candidatos**.
 - Total: **7 candidatos**, sem numeração formal.
 - Módulos analisados: **8 de 8**.
-- Fase 3: os sete candidatos foram convertidos em ADRs MADR e arquivados em `potential-adrs/done/`. Consulte o [índice das ADRs geradas](generated/README.md). A numeração permanece provisória (`XXX`), conforme o comando; lacunas e validações pendentes estão preservadas nos documentos.
+- Fase 3: os sete candidatos foram convertidos em ADRs MADR e arquivados em `potential-adrs/done/`. Consulte o [índice das ADRs geradas](generated/indice.md). A numeração permanece provisória (`XXX`), conforme o comando; lacunas e validações pendentes estão preservadas nos documentos.
 
 Revisão de persistência em 15/10/2026: os candidatos arquivados e as ADRs foram alinhados ao SQLite único e à atomicidade por ação; a escolha anterior de arquivos separados foi substituída antes da implementação. A pontuação documental não constitui medição de esforço ou resultado de runtime.
 

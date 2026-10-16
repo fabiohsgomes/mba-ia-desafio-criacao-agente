@@ -70,7 +70,7 @@ Falha na restauração: reverter a limpeza conversacional e a reposição do dom
 
 ### Impact Analysis
 
-- **Fontes introduzidas:** `be87e1d`, 17/09/2026 às 16:13:43 -03:00, `chore: enunciado e dados do desafio`.
+- **Fontes introduzidas:** `be87e1d`, 17/09/2026 às 16:13:43 -03:00.
 - **Escolha de SQLite:** documento de decisões datado de 15/10/2026; data de implementação desconhecida.
 - **Histórico consultado:** mudanças recentes em `dados/`, PRD e decisões; busca de commits por `SQLite`, `banco` e `restauração` não trouxe resultados.
 - **Evolução observável:** um commit introdutório dos dados; nenhuma migração ou implementação versionada. PRD e decisões não têm commits neste snapshot.
@@ -79,7 +79,7 @@ Falha na restauração: reverter a limpeza conversacional e a reposição do dom
 
 ### Alternatives (if observable)
 
-O enunciado deixa armazenamento livre, incluindo possibilidade de serviço externo. As decisões excluem banco em container/serviço externo e escolhem SQLite por simplicidade e reprodução local. O responsável confirmou que não houve comparação de produtos. A revisão para banco único decorre da necessidade de atomicidade; não houve benchmark ou migração implementada. Os JSONs presentes são fontes de carga; não há evidência de tentativa anterior de usá-los como armazenamento operacional.
+O documento de requisitos deixa armazenamento livre, incluindo possibilidade de serviço externo. As decisões excluem banco em container/serviço externo e escolhem SQLite por simplicidade e reprodução local. O responsável confirmou que não houve comparação de produtos. A revisão para banco único decorre da necessidade de atomicidade; não houve benchmark ou migração implementada. Os JSONs presentes são fontes de carga; não há evidência de tentativa anterior de usá-los como armazenamento operacional.
 
 ## Questions to Address in ADR (if created)
 

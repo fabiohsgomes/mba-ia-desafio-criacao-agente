@@ -7,7 +7,7 @@
 ## 1. Contexto e problema
 
 O assistente do Residencial Aurora será entregue como uma API local para
-conversas sobre reservas, visitantes e regulamento. O enunciado exige um
+conversas sobre reservas, visitantes e regulamento. O documento de requisitos exige um
 contrato HTTP/JSON específico, consumido pelo avaliador, e permite escolher
 o framework web. Também exige execução personalizada do Google ADK,
 persistência de eventos e consulta direta aos efeitos das operações.
@@ -21,12 +21,19 @@ Essa separação permite verificar efeitos persistidos sem transformar
 o texto do modelo em evidência de que uma operação ocorreu.
 O objetivo documentado é manter a entrega local simples e reproduzível.
 
-O contrato do desafio aparece no commit introdutório de 17/09/2026,
+O contrato do projeto aparece no commit introdutório de 17/09/2026,
 conforme o levantamento anterior; essa data não é a aprovação de FastAPI.
 O status Aceita registra a escolha de arquitetura de 15/10/2026.
 Não registra implementação, compatibilidade comprovada ou testes concluídos.
 Os documentos disponíveis ainda não apontam código executável da aplicação
 nem resultados comparativos; o responsável confirmou que não houve comparação.
+
+Todas as rotas recebem e devolvem JSON. O contrato compreende `POST /sessoes`, `POST
+/sessoes/{session_id}/mensagens`, `POST /sessoes/{session_id}/confirmacoes`, `GET
+/sessoes/{session_id}/eventos`, `GET /apartamentos/{numero}/reservas` e `GET
+/apartamentos/{numero}/visitantes`. Sessão inexistente retorna `404`; confirmação sem
+pendência nessa sessão retorna `409`. As consultas de verificação leem diretamente os
+dados, sem passar pelo modelo. O framework web é livre; FastAPI/Pydantic são escolhas locais aprovadas.
 
 ## 2. Fatores da decisão
 
@@ -44,13 +51,13 @@ nem resultados comparativos; o responsável confirmou que não houve comparaçã
 
 1. **FastAPI e Pydantic com API HTTP/JSON assíncrona:** opção aprovada
    para a camada web, a validação e a integração com o runtime ADK.
-   O protocolo e o contrato são restrições do desafio;
-   a escolha do framework utiliza a liberdade concedida pelo enunciado.
+   O protocolo e o contrato são restrições do projeto;
+   a escolha do framework utiliza a liberdade concedida pelo documento de requisitos.
 
 Não houve comparação com outros frameworks. A escolha foi feita para atender
-ao enunciado, usando a liberdade de framework que ele permite e as decisões
+ao documento de requisitos, usando a liberdade de framework que ele permite e as decisões
 locais aprovadas. FastAPI/Pydantic não são apresentados como tecnologias
-obrigatórias do desafio.
+obrigatórias do projeto.
 
 ## 4. Resultado da decisão
 
@@ -94,7 +101,7 @@ escolha aprovada, sem resultados comparativos.
 
 O contrato passa a orientar a fronteira de comunicação e seus critérios
 de aceite. Alterações que afetem o cliente ou a avaliação dependem da
-preservação das obrigações do enunciado, mesmo quando o framework
+preservação das obrigações do documento de requisitos, mesmo quando o framework
 permitir outra representação. Consultas diretas permanecem distintas da
 geração de respostas, tornando os efeitos do atendimento verificáveis.
 
@@ -116,4 +123,3 @@ de integração e latência ainda não comprovam funcionamento nesta entrega.
 
 - [docs/decisoes.md:15](../../../decisoes.md#L15)
 - [docs/PRD.md:410](../../../PRD.md#L410)
-- [README.md:96](../../../../README.md#L96)

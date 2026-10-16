@@ -11,7 +11,7 @@ A decisão aprovada estabelece o apartamento imutável da sessão como origem co
 
 Trata-se da fronteira estrutural de autorização do assistente, não da definição de uma entidade ou de uma regra de reserva. Não adiciona autenticação real: no cenário local, o apartamento informado na criação representa a identidade autenticada. A implementação dessa fronteira ainda não existe.
 
-O README introduziu o requisito no commit de 2026-09-17, `chore: enunciado e dados do desafio`. A estratégia foi explicitada no documento de decisões datado de 2026-10-15; esse documento está não rastreado no Git, portanto não há data de adoção versionada ou evolução de código a inferir.
+O requisito original foi registrado no commit de 2026-09-17. A estratégia foi explicitada no documento de decisões datado de 2026-10-15; esse documento está não rastreado no Git, portanto não há data de adoção versionada ou evolução de código a inferir.
 
 ## Why This Might Deserve an ADR
 
@@ -38,11 +38,12 @@ Passa os 3 E's: estrutura a integração, exige compreensão explícita e foi de
 
 ## Evidence Found in Codebase
 
+O apartamento é definido uma única vez na criação da sessão e representa o morador autenticado. Mensagens posteriores não podem alterar esse vínculo, modificar reservas ou visitantes de outro apartamento nem trazer dados deles à conversa ou aos eventos. A proteção deve estar no código: as tools usam o apartamento da sessão e não um valor escolhido pelo modelo sem validação. A consulta global de disponibilidade pode informar apenas livre ou ocupado, sem titular nem código de reserva.
+
 ### Key Files
 
 - [Decisões aprovadas](../../../../decisoes.md#isolamento-por-apartamento), linhas 105–109: origem do escopo e sanitização antes dos eventos.
 - [PRD](../../../../PRD.md#rf-003-consultar-reservas-visitantes-e-disponibilidade-com-isolamento), linhas 146–166: fluxo de consulta restrito ao contexto.
-- [README](../../../../../README.md#3-garantia-2-cada-sessão-pertence-a-um-apartamento), linhas 68–72: contrato de isolamento e ameaça de prompt injection.
 - [Mapeamento](../../../mapping.md#cross-cutting-concerns), linhas 161–166: fronteira transversal entre cinco módulos.
 
 ### Code Evidence
@@ -55,14 +56,14 @@ As tools devem obtê-lo exclusivamente da sessão, sem permitir que o modelo esc
 
 ### Impact Analysis
 
-- Requisito introduzido em 2026-09-17, com um commit no README; nenhum commit de implementação.
+- Requisito introduzido em 2026-09-17, com um commit do escopo inicial do projeto; nenhum commit de implementação.
 - Decisões e PRD locais datados de 2026-10-15, ainda não rastreados; `git log` desses caminhos não retorna commits.
 - Escopo previsto: cinco módulos; a quantidade de arquivos futuros não está definida.
 - Histórico não demonstra incidentes, migração ou custo real da solução.
 
 ### Alternatives (if observable)
 
-O README rejeita depender somente do prompt ou aceitar apartamento escolhido pelo modelo sem validação. Não há comparação documentada entre bibliotecas de autorização.
+O requisito original rejeita depender somente do prompt ou aceitar apartamento escolhido pelo modelo sem validação. Não há comparação documentada entre bibliotecas de autorização.
 
 ## Questions to Address in ADR (if created)
 

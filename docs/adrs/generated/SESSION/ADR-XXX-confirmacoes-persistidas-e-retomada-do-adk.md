@@ -22,13 +22,22 @@ Todas as gravações da ação compartilham conexão e transação: efeito,
 conclusão da confirmação, estado da sessão e eventos correspondentes.
 Falha antes do commit reverte tudo; após commit, o resultado permanece.
 
-O enunciado original registra o requisito desde 17-09-2026;
+O escopo inicial do projeto registra o requisito desde 17-09-2026;
 as decisões aprovadas em 15-10-2026 explicitam a estratégia persistente.
 O status Aceita registra essa aprovação documental.
 Não representa implementação concluída, teste executado ou compatibilidade
 comprovada entre ADK, transferência de especialistas e persistência SQLite.
 Foi aprovado um serviço de sessões próprio integrado à transação.
 Sua implementação e compatibilidade com ADK 2.12.0 ainda precisam de prova.
+
+A retomada só funciona quando a resposta à confirmação chega ao agente que a solicitou,
+escolhido pelo Runner. Topologia, bloqueios de transferência, configuração de retomada
+do App e serviço de sessões podem alterar esse encaminhamento. O alerta original
+relatava diferenças nas versões `2.2.0` e `2.9.1`, inclusive entre execução em memória e
+persistida; não constitui validação de `2.12.0`. Um retorno HTTP sem erro pode ocorrer
+sem executar a ação. Por isso, aprovação e efeito devem ser verificados com sessões
+persistidas e após reiniciar a API, além da inspeção no ambiente de desenvolvimento do
+ADK.
 
 ## Direcionadores da decisão
 
@@ -51,7 +60,7 @@ ela não é apresentada como alternativa compatível com os requisitos.
 Apenas a opção documentada consta como opção considerada.
 
 O responsável confirmou que não houve comparação de alternativas. A
-estratégia foi escolhida para atender às garantias do enunciado e às
+estratégia foi escolhida para atender às garantias do documento de requisitos e às
 decisões locais aprovadas. A decisão revisada define a atomicidade por transação compartilhada;
 a implementação do serviço próprio e sua comprovação permanecem pendentes.
 
@@ -117,4 +126,3 @@ sem declarar a integração implementada.
 
 - [docs/decisoes.md:119](../../../decisoes.md#confirmações-persistidas): estratégia aprovada de confirmação e execução única.
 - [docs/PRD.md:249](../../../PRD.md#rf-007-responder-confirmação-e-retomar-execução): retomada e participação na transação compartilhada.
-- [README.md:282](../../../../README.md#dicas-finais): risco documentado de sucesso sem retomada efetiva.

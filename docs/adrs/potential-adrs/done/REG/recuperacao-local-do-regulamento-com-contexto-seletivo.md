@@ -9,7 +9,7 @@
 
 Decisão documental aprovada: consultar o Markdown local por assunto, segmentando capítulos e artigos, sem embeddings ou banco vetorial. Apenas os trechos pertinentes devem retornar pela tool ao especialista e integrar os eventos persistidos. O principal não recebe o regulamento nas instruções. O objeto deste candidato é a arquitetura de recuperação de contexto; os horários, artigos e demais regras do condomínio não são decisões arquiteturais.
 
-O arquivo-fonte possui 491 linhas e 14 capítulos. Seu conteúdo e o requisito de consulta localizada foram introduzidos em `be87e1d`, de 17/09/2026, `chore: enunciado e dados do desafio`. A escolha de busca local sem embeddings aparece nas decisões datadas de 15/10/2026, ainda não versionadas neste snapshot. Não há segmentador, mecanismo de busca, tool ou teste implementado. O algoritmo de seleção não foi definido e não é escolhido por esta análise.
+O arquivo-fonte possui 491 linhas e 14 capítulos. Seu conteúdo e o requisito de consulta localizada foram introduzidos em `be87e1d`, de 17/09/2026. A escolha de busca local sem embeddings aparece nas decisões datadas de 15/10/2026, ainda não versionadas neste snapshot. Não há segmentador, mecanismo de busca, tool ou teste implementado. O algoritmo de seleção não foi definido e não é escolhido por esta análise.
 
 ## Por que pode merecer uma ADR
 
@@ -36,13 +36,14 @@ A base decorre da estratégia completa de recuperação de conhecimento. Capítu
 
 ## Evidências encontradas no repositório
 
+As respostas sobre regras devem usar `dados/regulamento.md`, sem colocar o regulamento nas instruções do principal. Nenhum evento da sessão pode conter trechos de capítulos de assuntos alheios à pergunta: texto integral no histórico amplia o contexto de todas as chamadas seguintes. Na avaliação, a pergunta sobre o funcionamento da piscina aos domingos deve trazer o horário de fechamento da fonte; os eventos devem conter as chamadas de tools anteriores, sem capítulos irrelevantes.
+
 ### Arquivos principais
 
 - [decisoes.md](../../../../decisoes.md#L64), linhas 64–72: escolha explícita, justificativa e limite de escopo.
 - [PRD.md](../../../../PRD.md#L277), linhas 277–298: recuperação por tool, pertinência, ambiguidade e indisponibilidade da fonte.
 - [PRD.md](../../../../PRD.md#L464), linhas 464–467: trade-off da busca local e cobertura de sinônimos.
 - [PRD.md](../../../../PRD.md#L569), linhas 569–576: risco de contexto irrelevante e validação por eventos.
-- [README.md](../../../../../README.md#L80), linhas 80–84 e 209: garantia de contexto localizado e verificação no fluxo do avaliador.
 - [dados/regulamento.md](../../../../../dados/regulamento.md#L149), linhas 149–159: exemplo de estrutura por capítulo/artigo e trecho pertinente ao caso de piscina aos domingos; a regra de horário é dado de domínio, não candidato a ADR.
 
 ### Evidência documental — sem código executável
@@ -59,7 +60,7 @@ Trechos literais de `docs/decisoes.md`:
 ### Análise de impacto e histórico
 
 - Consultados `git log --follow --diff-filter=A`, log recente do regulamento e documentos, e busca por regulamento/busca/contexto/embeddings nas mensagens.
-- O único commit disponível, de 17/09/2026, introduz a fonte e o enunciado; não há evolução do mecanismo de busca ou resultado de testes versionado.
+- O único commit disponível, de 17/09/2026, introduz a fonte e o documento de requisitos; não há evolução do mecanismo de busca ou resultado de testes versionado.
 - Decisão posterior datada documentalmente de 15/10/2026, sem commit que comprove sua adoção.
 - Evidência em um arquivo de conhecimento próprio (491 linhas, 14 capítulos) e três documentos compartilhados; zero arquivos executáveis REG.
 - Afeta REG, AGENT e SESSION. Não se infere economia medida de tokens, latência ou custo monetário.

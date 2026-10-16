@@ -8,9 +8,9 @@
 
 ## What Was Identified
 
-A API será implementada com FastAPI e Pydantic, em padrão assíncrono compatível com Runner/App do Google ADK, expondo o contrato HTTP/JSON do enunciado. A camada HTTP recebe conversas e confirmações e oferece consultas diretas de eventos e efeitos de domínio para avaliação, sem depender de resposta gerada pelo modelo nessas consultas.
+A API será implementada com FastAPI e Pydantic, em padrão assíncrono compatível com Runner/App do Google ADK, expondo o contrato HTTP/JSON do documento de requisitos. A camada HTTP recebe conversas e confirmações e oferece consultas diretas de eventos e efeitos de domínio para avaliação, sem depender de resposta gerada pelo modelo nessas consultas.
 
-Framework, validação e protocolo foram consolidados neste candidato por formarem a mesma fronteira de integração. O contrato é uma restrição do desafio; FastAPI/Pydantic são escolhas aprovadas nos documentos locais. O histórico mostra a introdução do enunciado em `be87e1d`, de 17/09/2026, mas não registra a decisão posterior de framework: PRD e decisões, datados de 15/10/2026, permanecem não rastreados. Não há dependências Python, rotas ou testes implementados.
+Framework, validação e protocolo foram consolidados neste candidato por formarem a mesma fronteira de integração. O contrato é uma restrição do projeto; FastAPI/Pydantic são escolhas aprovadas nos documentos locais. O histórico mostra a introdução do documento de requisitos em `be87e1d`, de 17/09/2026, mas não registra a decisão posterior de framework: PRD e decisões, datados de 15/10/2026, permanecem não rastreados. Não há dependências Python, rotas ou testes implementados.
 
 ## Why This Might Deserve an ADR
 
@@ -35,10 +35,11 @@ Step 0: categoria 2 (framework principal) e categoria 4 (protocolo/arquitetura d
 
 ## Evidence Found in Codebase
 
+Todas as rotas recebem e devolvem JSON. O contrato compreende `POST /sessoes`, `POST /sessoes/{session_id}/mensagens`, `POST /sessoes/{session_id}/confirmacoes`, `GET /sessoes/{session_id}/eventos`, `GET /apartamentos/{numero}/reservas` e `GET /apartamentos/{numero}/visitantes`. Sessão inexistente retorna `404`; confirmação sem pendência nessa sessão retorna `409`. As consultas de verificação leem diretamente os dados, sem passar pelo modelo. O framework web é livre; FastAPI/Pydantic são escolhas locais aprovadas.
+
 ### Key Files
 
 - [docs/decisoes.md](../../../../decisoes.md#L15), linhas 15–26: FastAPI/Pydantic aprovados e obrigação de preservar contrato HTTP.
-- [README.md](../../../../../README.md#L96), linhas 96–104: execução assíncrona, contrato JSON e consultas de verificação independentes do modelo; linhas 106–169 apresentam as seis operações HTTP.
 - [docs/PRD.md](../../../../PRD.md#L303), linhas 303–323: eventos completos e listagens diretas de reservas/visitantes.
 - [docs/PRD.md](../../../../PRD.md#L410), linhas 410–417: runtime, framework e padrão assíncrono planejados.
 - [mapping.md](../../../mapping.md#L71): fronteira lógica do módulo API; nenhum arquivo de implementação identificado.
@@ -54,26 +55,26 @@ Usar FastAPI + Pydantic para a API e a validação dos dados
 docs/PRD.md:416
 API em padrão assíncrono compatível com o runtime do ADK
 
-README.md:104
+Contrato HTTP incorporado neste documento:
 Todas as rotas recebem e devolvem JSON.
 ```
 
 ### Impact Analysis
 
-- **Introdução do contrato:** commit `be87e1d`, 17/09/2026 às 16:13:43 -03:00, `chore: enunciado e dados do desafio`.
+- **Introdução do contrato:** commit `be87e1d`, 17/09/2026 às 16:13:43 -03:00.
 - **Decisão de framework:** registrada no documento de decisões de 15/10/2026; data de adoção em código não disponível.
-- **Histórico consultado:** introdução e mudanças recentes de README, PRD e decisões; busca de mensagens por `API`, `FastAPI` e `contrato` não trouxe commits adicionais.
-- **Modificações observáveis:** um commit referente ao README; nenhum histórico versionado de PRD/decisões, nenhuma implementação da escolha.
+- **Histórico consultado:** introdução e mudanças recentes do escopo inicial do projeto, PRD e decisões; busca de mensagens por `API`, `FastAPI` e `contrato` não trouxe commits adicionais.
+- **Modificações observáveis:** um commit referente ao escopo inicial do projeto; nenhum histórico versionado de PRD/decisões, nenhuma implementação da escolha.
 - **Alcance previsto:** 3 documentos de requisitos/contexto e 6 módulos lógicos envolvidos; contagens não representam arquivos de runtime existentes.
 - **Validação pendente:** instalação reproduzível, schemas e rotas reais, contrato HTTP, integração assíncrona ADK e efeitos observados diretamente no armazenamento.
 
 ### Alternatives (if observable)
 
-O README permite framework web livre e menciona FastAPI como usado no curso. As decisões aprovam FastAPI/Pydantic; nenhuma comparação com outro framework nomeado ou experimento está registrada. Não se inferem alternativas descartadas ou vantagens de desempenho não medidas.
+A escolha do framework web é livre. As decisões aprovam FastAPI/Pydantic; nenhuma comparação com outro framework nomeado ou experimento está registrada. Não se inferem alternativas descartadas ou vantagens de desempenho não medidas.
 
 ## Questions to Address in ADR (if created)
 
-- Por que FastAPI/Pydantic foi escolhido frente à liberdade de framework do enunciado? Quais critérios específicos de validação e integração pesaram?
+- Por que FastAPI/Pydantic foi escolhido frente à liberdade de framework do documento de requisitos? Quais critérios específicos de validação e integração pesaram?
 - Como os handlers assíncronos delimitam a execução do ADK, a retomada e a consulta direta ao domínio?
 - Como mapear falhas externas e erros de validação sem modificar os campos/status obrigatórios ou afirmar efeitos não persistidos?
 - Como comprovar o contrato com testes e manter as regras críticas nas tools e no armazenamento?
